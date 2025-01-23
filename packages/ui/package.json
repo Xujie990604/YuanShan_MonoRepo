@@ -1,0 +1,6 @@
+{
+  "name": "@yuan-shan/ui",
+  "peerDependencies": {
+    "vue": "^3.3.4"
+  }
+}
