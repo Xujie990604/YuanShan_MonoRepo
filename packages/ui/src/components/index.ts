@@ -1,4 +1,4 @@
-import input from './input/index.ts'
+import input from './input/index'
 
 
 export {

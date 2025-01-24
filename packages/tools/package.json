@@ -1,3 +1,11 @@
 {
-  "name": "@yuan-shan/tools"
+  "name": "@yuan-shan/tools",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.1.2",
+    "tslib": "^2.8.1",
+    "typescript": "5.7.2"
+  }
 }

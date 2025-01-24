@@ -1,17 +1,13 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+// TODO: npm 包的访问机制是什么样子的？我不想要这样复杂的路径进行引入，是否有配置项可以默认访问这个路径
+import {add} from '@yuan-shan/tools/dist/bundle.esm';
+console.log(add(1, 5));
+import yInput from '@yuan-shan/ui/dist/lib/yuanshan-ui';
+console.log(yInput);
 </script>
 
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+<yInput></yInput>
 </template>
 
 <style scoped>
