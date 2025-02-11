@@ -1,8 +1,9 @@
 <script setup>
-// TODO: npm 包的访问机制是什么样子的？我不想要这样复杂的路径进行引入，是否有配置项可以默认访问这个路径
-import {add} from '@yuan-shan/tools/dist/bundle.esm';
-console.log(add(1, 5));
-import yInput from '@yuan-shan/ui/dist/lib/yuanshan-ui';
+// NOTE：一个项目的默认导出文件可以通过 package.json 中的main(commonjs规范)、module(ESM规范) 字段进行指定，
+import { add } from '@yuan-shan/tools';
+console.log(add(1, 9));
+import yInput from '@yuan-shan/ui/dist/yuanshan-ui';
+// TODO： yInput 的组件现在是一个什么类型的数据？是不是需要用 Vue.component 进行注册？之后才能用
 console.log(yInput);
 </script>
 
@@ -11,16 +12,4 @@ console.log(yInput);
 </template>
 
 <style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
 </style>
