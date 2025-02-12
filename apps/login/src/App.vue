@@ -3,7 +3,7 @@
 import { add } from '@yuan-shan/tools';
 console.log(add(1, 9));
 import yInput from '@yuan-shan/ui/dist/yuanshan-ui';
-// TODO： yInput 的组件现在是一个什么类型的数据？是不是需要用 Vue.component 进行注册？之后才能用
+// TODO： yInput   Vue.component 进行注册？之后才能用
 console.log(yInput);
 </script>
 
