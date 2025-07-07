@@ -1,11 +1,14 @@
 {
-  "name": "@yuan-shan/login",
+  "name": "@yuan-shan/user",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
+  },
+  "dependencies": {
+    "dayjs": "1.10.0"
   }
 }
