@@ -10,7 +10,7 @@ export default defineConfig({
       external: ['axios', 'dayjs'],
       // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
       output: {
-        format: 'umd',
+        format: 'iife',
         globals: {
           axios: 'axios',
           dayjs: 'dayjs',
