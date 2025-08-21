@@ -44,20 +44,16 @@ onLoad()
   <van-button type="primary">{{ currentTime }}</van-button>
   
   <van-list
-  v-model:loading="loading"
-  :finished="finished"
-  finished-text="没有更多了"
-  @load="onLoad"
->
+    v-model:loading="loading"
+    :finished="finished"
+    finished-text="没有更多了"
+    @load="onLoad"
+  >
     <van-cell 
       v-for="item in list" 
       :key="item.id" 
       :title="item.title" 
       :label="`ID: ${item.id}`"
     />
-</van-list>
+  </van-list>
 </template>
-
-<style scoped>
-
-</style>
