@@ -4,14 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>excludeDependencies</title>
-    <!-- 1. 基础运行时 -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@3.5.19/dist/vue.global.min.js"></script>
+    <!-- 1. 基础运行时（开发不需要全局 Vue，可保留注释供生产参考） -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue@3.5.19/dist/vue.global.min.js"></script> -->
     <!-- 2. 组件库（生产用全局，开发不使用该全局） -->
-    <script src="https://cdn.jsdelivr.net/npm/vant@4.9.21/lib/vant.min.js"></script>
-    <!-- 3. 工具库 -->
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vant@4.9.21/lib/vant.min.js"></script> -->
+    <!-- 3. 工具库（生产用全局，开发不使用该全局） -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.13/dayjs.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/axios@1.10.0/dist/axios.min.js"></script> -->
+    <!-- 生产环境请在 HTML 注入 Vant 的 CSS：
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@4.9.21/lib/index.min.css">
+    -->
   </head>
   <body>
     <div id="app"></div>
