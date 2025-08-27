@@ -1,6 +1,5 @@
-import input from './input/index'
-
+import YInput from './input/index'
 
 export {
-  input
+  YInput
 }

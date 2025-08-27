@@ -8,11 +8,13 @@ import cssnano from "cssnano";
 
 export default {
   input: "./src/index.ts",
-  output: {
-    name: "YuanShan-UI",
-    file: "./dist/yuanshan-ui.js",
-    format: "es",
-  },
+  output: [
+    {
+      file: "./dist/yuanshan-ui.js",
+      format: "es",
+      exports: "named"
+    }
+  ],
   external: ["vue"],
   plugins: [
     resolve(),
@@ -24,7 +26,10 @@ export default {
       css: false, // 交给 rollup-plugin-postcss 处理
       transformAssetUrls: true,
     }),
-    typescript(),
+    typescript({
+      declaration: true,
+      declarationDir: "./dist"
+    }),
     postcss({
       plugins: [autoprefixer(), cssnano()],
       extract: "css/index.css",

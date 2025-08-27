@@ -1,4 +1,4 @@
-# excludeDependencies
+# 打包产物排除三方依赖
 
 ## 一、使用 external 排除依赖
 

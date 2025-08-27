@@ -1,14 +1,17 @@
 <script setup lang="js">
 import { ref } from 'vue';
 
-// TODO：天呼啦，不知道为什么，目前的配置不知道 ts 的写法，天塌了
 
-
-const name = ref('input 组件');
+const name = ref('input 组件默认提示文字');
 </script>
 
 <template>
-  <div>
-    <input type="text" />
-  </div>
+  <h1>input组件</h1>
+  <input type="text" :placeholder="name" />
 </template>
+
+<style scoped>
+input {
+  background-color: red;
+}
+</style>

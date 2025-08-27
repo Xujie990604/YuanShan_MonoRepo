@@ -1,6 +1,15 @@
 {
   "name": "@yuan-shan/tools",
+  "type": "module",
   "module": "dist/bundle.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "import": "./dist/bundle.esm.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "scripts": {
     "build": "rollup -c"
   },
