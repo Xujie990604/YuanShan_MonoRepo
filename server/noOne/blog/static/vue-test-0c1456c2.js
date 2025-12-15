@@ -1,0 +1,1 @@
+import{d as l,r as n,h as o,k as u,o as c,c as i,l as a,t,F as f}from"./index-e2986c94.js";const v=l({__name:"vue-test",setup(p){const e=n({foo:o(0),bar:o([1,2,3])});let{foo:s,bar:r}=u(e);return setTimeout(()=>{s.value++,r.value.push(4)},2e3),(m,_)=>(c(),i(f,null,[a("div",null,t(e.foo),1),a("div",null,t(e.bar),1),a("div",null,t(e.baz),1)],64))}});export{v as default};

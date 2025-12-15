@@ -1,0 +1,1 @@
+import{ak as t,r as o,K as e}from"./index-e2986c94.js";const u=t("userPermission",()=>{const s=o({userType:"",permissionList:{user:[],car:[],salary:[]}}),r=e(()=>s.userType),i=e(()=>s.permissionList);return{userPermissionList:s,permissionList:i,userType:r}});export{u};
