@@ -1,6 +1,6 @@
 import { Card, Form, Input, Select, Button, Space } from 'antd'
 import type { FormInstance } from 'antd'
-import type { IGetUserListReq } from '../../request/users'
+import type { IUserListFilterForm } from '../../request/users'
 
 interface RoleOption {
   label: string
@@ -9,7 +9,7 @@ interface RoleOption {
 
 interface UserSearchFormProps {
   // antd 表单实例（由父组件创建并传入）
-  form: FormInstance<IGetUserListReq>
+  form: FormInstance<IUserListFilterForm>
   // 角色下拉列表数据
   roleOptions: RoleOption[]
   // 点击“查询”按钮回调
@@ -25,7 +25,7 @@ interface UserSearchFormProps {
 function UserSearchForm({ form, roleOptions, onSearch, onReset }: UserSearchFormProps) {
   return (
     <Card style={{ marginBottom: 16 }} size="small">
-      <Form<IGetUserListReq> form={form} layout="inline">
+      <Form<IUserListFilterForm> form={form} layout="inline">
         {/* 用户姓名输入项 */}
         <Form.Item label="用户姓名" name="username">
           <Input placeholder="请输入用户姓名" allowClear />

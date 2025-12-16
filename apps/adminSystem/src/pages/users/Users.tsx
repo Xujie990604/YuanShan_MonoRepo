@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Form } from 'antd'
 import { useQuery } from '@tanstack/react-query'
-import type { IGetUserListReq, IUserInfo } from '../../request/users'
+import type { IUserInfo, IUserListFilterForm } from '../../request/users'
 import { getUserListRequest } from '../../request/users'
 import { UserRole } from './type'
 import UserSearchForm from './UserSearchForm'
@@ -16,13 +16,13 @@ const roleOptions = [
 
 function UsersPage() {
   // 查询表单实例：负责管理搜索条件的值和校验状态
-  const [form] = Form.useForm<IGetUserListReq>()
+  const [form] = Form.useForm<IUserListFilterForm>()
   // 当前页码（从 1 开始）
   const [page, setPage] = useState(1)
   // 每页条数
   const [pageSize, setPageSize] = useState(10)
   // 当前搜索条件（从表单中读取后存起来，保证 useQuery 的 queryKey 是可序列化的）
-  const [filters, setFilters] = useState<Partial<IGetUserListReq>>({})
+  const [filters, setFilters] = useState<Partial<IUserListFilterForm>>({})
 
   /**
    * 使用 React Query 管理“用户列表”这份服务器数据：

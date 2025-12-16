@@ -17,6 +17,9 @@ export interface IGetUserListReq {
   role?: number
 }
 
+// 用户列表搜索表单使用的字段（不包含 page/limit）
+export type IUserListFilterForm = Pick<IGetUserListReq, 'username' | 'address' | 'role'>
+
 /**
  * 用户信息接口
  */

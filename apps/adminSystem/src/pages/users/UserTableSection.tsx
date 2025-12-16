@@ -79,10 +79,6 @@ function UserTableSection({
           dataSource={data}
           loading={loading}
           pagination={false}
-          // 通过 calc(100vh - XXXpx) 控制表格可视区域高度：
-          // - 100vh 是浏览器视口高度
-          // - 290px 预留了 Header、搜索区域、卡片间距和分页器的空间
-          // 如果未来整体布局高度变化，这里可以微调这个值
           scroll={{ y: 'calc(100vh - 290px)' }}
         />
       </Card>
