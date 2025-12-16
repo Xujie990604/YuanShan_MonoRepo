@@ -25,4 +25,8 @@ export class UserQueryDTO {
   @IsOptional()
   @IsInt({ message: 'gender 必须是数字' })
   gender?: number;
+
+  @IsOptional()
+  @IsString({ message: 'address 必须是字符串' })
+  address?: string;
 }

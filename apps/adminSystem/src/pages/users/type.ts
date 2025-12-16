@@ -13,5 +13,24 @@ export const Gender = {
 } as const
 export type Gender = (typeof Gender)[keyof typeof Gender]
 
+// 通用下拉选项类型（不依赖 antd）
+export interface SelectOption {
+  label: string
+  value: number
+}
+
+// 用户角色下拉选项
+export const USER_ROLE_OPTIONS: SelectOption[] = [
+  { label: '管理员', value: UserRole.Admin },
+  { label: '普通成员', value: UserRole.Member },
+  { label: '访客', value: UserRole.Guest },
+]
+
+// 性别下拉选项
+export const GENDER_OPTIONS: SelectOption[] = [
+  { label: '男', value: Gender.Male },
+  { label: '女', value: Gender.Female },
+]
+
 
 

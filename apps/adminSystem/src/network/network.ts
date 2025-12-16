@@ -84,6 +84,11 @@ class UNVRequest {
   put<T = any, D = any>(config: AxiosRequestConfig, requestConfig?: IRequestConfig) {
     return this.request<T, D>({ ...config, method: 'PUT' }, requestConfig)
   }
+
+  // patch 类型的请求
+  patch<T = any, D = any>(config: AxiosRequestConfig, requestConfig?: IRequestConfig) {
+    return this.request<T, D>({ ...config, method: 'PATCH' }, requestConfig)
+  }
 }
 
 export default UNVRequest

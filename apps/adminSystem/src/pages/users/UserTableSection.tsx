@@ -1,4 +1,4 @@
-import { Card, Table, Pagination } from 'antd'
+import { Card, Table, Pagination, Button, Popconfirm, Space } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import type { IUserInfo } from '../../request/users'
 import { Gender } from './type'
@@ -16,6 +16,10 @@ interface UserTableSectionProps {
   total: number
   // 分页变化回调
   onPageChange: (page: number, pageSize: number) => void
+  // 点击“编辑”按钮回调
+  onEdit: (user: IUserInfo) => void
+  // 点击“删除”按钮回调
+  onDelete: (user: IUserInfo) => void
 }
 
 /**
@@ -29,6 +33,8 @@ function UserTableSection({
   pageSize,
   total,
   onPageChange,
+  onEdit,
+  onDelete,
 }: UserTableSectionProps) {
   /**
    * Table 表头和每一列的配置：
@@ -62,6 +68,27 @@ function UserTableSection({
       title: '地址',
       dataIndex: ['profile', 'address'],
       key: 'address',
+    },
+    {
+      title: '操作',
+      key: 'action',
+      render: (_, record) => (
+        <Space>
+          <Button type="link" onClick={() => onEdit(record)}>
+            编辑
+          </Button>
+          <Popconfirm
+            title="确认删除该用户？"
+            okText="删除"
+            cancelText="取消"
+            onConfirm={() => onDelete(record)}
+          >
+            <Button type="link" danger>
+              删除
+            </Button>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ]
 

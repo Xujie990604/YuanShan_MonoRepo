@@ -14,13 +14,13 @@ export class Profile {
   @Exclude()
   id: number;
 
-  @Column()
+  @Column({ nullable: true, comment: '性别' })
   gender: number;
 
-  @Column()
+  @Column({ nullable: true, comment: '头像 URL' })
   photo: string;
 
-  @Column()
+  @Column({ nullable: true, comment: '地址' })
   address: string;
 
   @OneToOne(() => User, { onDelete: 'CASCADE' })

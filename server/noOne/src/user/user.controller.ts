@@ -59,9 +59,9 @@ export class UserController {
    * @param dto 用户信息
    * @returns 创建结果
    */
-  addUser(@Body() dto: CreateUserDto) {
-    console.log('user controller', dto);
-    return this.userService.create(dto);
+  async addUser(@Body() dto: CreateUserDto) {
+    const { id } = await this.userService.create(dto);
+    return { id };
   }
 
   @Patch('/:id')
