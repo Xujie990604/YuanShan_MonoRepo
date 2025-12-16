@@ -23,11 +23,6 @@ export class RolesController {
     return this.rolesService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rolesService.findOne(+id);
-  }
-
   @Patch(':id')
   @Can(PermissionEnum.ROLES_UPDATE)
   update(@Param('id') id: string, @Body() updateRoleDto: UpdateRoleDto) {

@@ -32,11 +32,6 @@ export class MenusController {
     return this.menusService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.menusService.findOne(+id);
-  }
-
   @Patch(':id')
   @Can(PermissionEnum.MENUS_UPDATE)
   update(@Param('id') id: string, @Body() updateMenuDto: UpdateMenuDto) {
