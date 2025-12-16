@@ -20,11 +20,11 @@ export class UserService {
   /**
    * 查询所有用户
    * @param query 查询条件
-   * @returns 用户列表
+   * @returns 用户列表和总数
    */
-  findAll(query: UserQueryDTO) {
+  async findAll(query: UserQueryDTO) {
     const { page = 1, limit = 20, username, role, gender } = query;
-    return this.userRepository.find({
+    const [userInfoList, total] = await this.userRepository.findAndCount({
       select: {
         id: true,
         username: true,
@@ -50,6 +50,8 @@ export class UserService {
         },
       },
     });
+
+    return { userInfoList, total };
   }
 
   /**

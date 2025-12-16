@@ -11,6 +11,7 @@ import {
   ArgumentsHost,
   Catch,
 } from '@nestjs/common';
+import { IResponseType } from 'src/interfaces/response.interface';
 
 @Catch()
 export class AllExceptionFilter implements ExceptionFilter {
@@ -45,7 +46,8 @@ export class AllExceptionFilter implements ExceptionFilter {
       }
     }
 
-    const responseBody = {
+    const responseBody: IResponseType<null> = {
+      data: null,
       code: status,
       message,
     };

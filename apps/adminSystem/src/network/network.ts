@@ -1,9 +1,9 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig } from 'axios'
-import type { UNVRequestInterceptors } from './types'
+import type { YSNetworkInstanceParam } from './types'
 import type { IRequestConfig } from '../request/type'
-import { handleHTTPCode, handleBusinessCode } from './httpResponse'
-
+import { isResponseType } from '../request/type'
+import { handleHTTPCode, handleBusinessCode } from './handleCode'
 
 class UNVRequest {
   // axios 实例
@@ -12,13 +12,9 @@ class UNVRequest {
   // 配置参数
   requestConfig: IRequestConfig = { loading: true, toast: true }
 
-
-  // config 类型切换为 CreateAxiosDefaults 的派生类
-
-  constructor(config: UNVRequestInterceptors) {
+  constructor(config: YSNetworkInstanceParam) {
     // 生成 axios 实例
     this.instance = axios.create(config)
-
 
     this.instance.interceptors.request.use(
       config.requestInterceptor,
@@ -31,7 +27,6 @@ class UNVRequest {
     )
   }
 
-  // config 的类型切换为 AxiosRequestConfig 的派生类
   // 发起网络请求
   request<T, D>(config: AxiosRequestConfig, { loading = true, toast = true }: IRequestConfig = {}) {
     if (loading) {
@@ -44,11 +39,17 @@ class UNVRequest {
         .request<T, D>(config)
         // 请求成功
         .then(res => {
-          if (res.code === 200) {
-            resolve(res.data)
+          // 通过类型守卫，把 res 收窄为 IResponseType<T>
+          if (isResponseType<T>(res)) {
+            if (res.code === 200) {
+              resolve(res.data)
+            } else {
+              reject(res.data)
+              handleBusinessCode(res.data, toast)
+            }
           } else {
-            reject(res.data)
-            handleBusinessCode(res.data, toast)
+            // TODO: 这里是未来支持的其它返回结构，可以按需扩展
+            resolve(res as unknown as T)
           }
         })
         // 请求失败

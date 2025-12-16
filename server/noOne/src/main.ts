@@ -8,6 +8,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { ConfigEnum } from './enum/config.enum';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './filters/all-exception.filter';
+import { ResponseInterceptor } from './interceptors/response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter());
@@ -27,8 +28,11 @@ async function bootstrap() {
   // 全局异常过滤器
   app.useGlobalFilters(new AllExceptionFilter(logger));
 
-  // 全局拦截器
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(reflector));
+  // 全局拦截器（先序列化，再统一返回格式）
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(reflector),
+    new ResponseInterceptor(),
+  );
 
   // 全局管道
   app.useGlobalPipes(

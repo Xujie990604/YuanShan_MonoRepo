@@ -4,12 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
+    "@tanstack/react-query": "^5.90.12",
     "@yuan-shan/tools": "workspace:*",
     "@yuan-shan/ui": "workspace:*",
     "axios": "^1.10.0",
     "dayjs": "1.11.13",
+    "react-router-dom": "^7.10.1",
     "vant": "^4.9.21",
-    "vue": "^3.5.17"
+    "vue": "^3.5.17",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.0",

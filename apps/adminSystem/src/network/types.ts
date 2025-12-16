@@ -5,7 +5,7 @@ import type { CreateAxiosDefaults, InternalAxiosRequestConfig, AxiosResponse } f
 /**
  * 创建 service 实例的入参
  */
-export interface UNVRequestInterceptors extends CreateAxiosDefaults {
+export interface YSNetworkInstanceParam extends CreateAxiosDefaults {
   requestInterceptor?: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig
   requestInterceptorCatch?: (error: any) => any
   responseInterceptor?: (res: AxiosResponse) => AxiosResponse

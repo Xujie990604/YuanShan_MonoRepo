@@ -1,5 +1,5 @@
 /**
- * 接口请求通用参数
+ * 接口请求配置参数
  * @interface loading 是否开启 loading
  * @interface toast 是否错误码提示
  */
@@ -9,7 +9,7 @@ export interface IRequestConfig {
 }
 
 /**
- * 云接口返回格式
+ * 接口返回值类型
  */
 export interface IResponseType<T = any> {
   data: T
@@ -18,19 +18,13 @@ export interface IResponseType<T = any> {
 }
 
 /**
- * 用户登录请求参数接口
+ * 类型守卫：判断 res 是否为 IResponseType<T>
  */
-export interface IUserLoginRequestData {
-  name: string
-  password: string
+export function isResponseType<T = any>(res: unknown): res is IResponseType<T> {
+  return (
+    typeof res === 'object' &&
+    res !== null &&
+    'code' in res &&
+    'data' in res
+  )
 }
-
-/**
- * 用户登录返回参数接口
- */
-export interface IUserLoginResponseData {
-  id: number
-  name: string
-  userType: number
-}
-

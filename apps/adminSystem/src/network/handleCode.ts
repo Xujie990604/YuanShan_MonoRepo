@@ -8,6 +8,16 @@ import { showToast } from 'vant'
 export function handleHTTPCode(code: number, toast: boolean): void {
   if (!toast) return
   let toastText = ''
+  const httpCodeText = {
+    400: '请求错误',
+    401: '未授权',
+    403: '拒绝访问',
+    404: '未找到资源',
+    500: '服务器错误',
+    502: '网关错误',
+    503: '服务不可用',
+    504: '网关超时',
+  }
   switch (true) {
     // NOTE: 如果有需要添加额外操作的错误码，自行添加 case 分支
     // case code === xxxx:
@@ -17,8 +27,8 @@ export function handleHTTPCode(code: number, toast: boolean): void {
 
     default:
       toastText =
-        locales.global.t(`HTTP_errCode_${code}`) ||
-        'requestCommonError' + `${code !== undefined ? code : ''}`
+        httpCodeText[code as keyof typeof httpCodeText] ||
+        '网络请求失败' + `${code !== undefined ? code : ''}`
   }
 
   showToast({
