@@ -1,4 +1,4 @@
-import { showToast } from 'vant'
+import { getMessageInstance } from '../utils/messageInstance'
 
 
 /**
@@ -31,11 +31,13 @@ export function handleHTTPCode(code: number, toast: boolean): void {
         '网络请求失败' + `${code !== undefined ? code : ''}`
   }
 
-  showToast({
-    message: toastText,
-    position: 'bottom',
-    duration: 2000,
-  })
+  const message = getMessageInstance()
+  if (message) {
+    message.error({
+      content: toastText,
+      duration: 2, // 单位：秒
+    })
+  }
 }
 
 /**
@@ -44,7 +46,7 @@ export function handleHTTPCode(code: number, toast: boolean): void {
  */
 export function handleBusinessCode(data: any, toast: boolean): void {
   if (!toast) return
-  const { code, message } = data
+  const { code, message: msg } = data
   let toastText = ''
   switch (true) {
     // NOTE: 如果有需要添加额外操作的错误码，自行添加 case 分支
@@ -56,17 +58,20 @@ export function handleBusinessCode(data: any, toast: boolean): void {
     // Token 认证失败、过期
     case code === 1001 || code === 1002:
       localStorage.clear()
-      toastText = message
+      toastText = msg
       break
     default:
       toastText =
-        message || `请求失败( ${code})`
+        msg || `请求失败( ${code})`
   }
-  showToast({
-    message: toastText,
-    position: 'bottom',
-    duration: 2000,
-  })
+
+  const message = getMessageInstance()
+  if (message) {
+    message.error({
+      content: toastText,
+      duration: 2,
+    })
+  }
 }
 
 

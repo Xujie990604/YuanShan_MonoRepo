@@ -4,6 +4,7 @@ import type { YSNetworkInstanceParam } from './types'
 import type { IRequestConfig } from '../request/type'
 import { isResponseType } from '../request/type'
 import { handleHTTPCode, handleBusinessCode } from './handleCode'
+import { getMessageInstance } from '../utils/messageInstance'
 
 class UNVRequest {
   // axios 实例
@@ -29,8 +30,16 @@ class UNVRequest {
 
   // 发起网络请求
   request<T, D>(config: AxiosRequestConfig, { loading = true, toast = true }: IRequestConfig = {}) {
+    // 用于保存 loading 提示的关闭函数
+    // Ant Design 的 message.loading() 返回一个函数，调用它可以关闭 loading
+    let hideLoading: (() => void) | null = null
+
     if (loading) {
-      // TODO:显示加载中提示
+      // 显示加载中提示
+      const message = getMessageInstance()
+      if (message) {
+        hideLoading = message.loading('加载中...', 0) // 0 表示不自动关闭，需要手动关闭
+      }
     }
 
     return new Promise<T>((resolve, reject) => {
@@ -47,19 +56,18 @@ class UNVRequest {
               reject(res.data)
               handleBusinessCode(res.data, toast)
             }
-          } else {
-            // TODO: 这里是未来支持的其它返回结构，可以按需扩展
-            resolve(res as unknown as T)
           }
         })
         // 请求失败
         .catch(err => {
-          handleHTTPCode(err.status, toast)
+          const status = err?.response?.status ?? err?.status
+          handleHTTPCode(status, toast)
           reject(err)
         })
         .finally(() => {
-          if (loading) {
-            // TODO:隐藏加载中提示
+          // 关闭加载中提示
+          if (hideLoading) {
+            hideLoading() // 调用关闭函数，隐藏 loading
           }
         })
     })

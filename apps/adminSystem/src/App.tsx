@@ -1,7 +1,8 @@
 
-import { Layout, Menu, Dropdown, Avatar } from 'antd'
+import { Layout, Menu, Dropdown, Avatar, App as AntdApp } from 'antd'
 import { UserOutlined } from '@ant-design/icons'
 import { Link, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import LoginPage from './pages/login/Login'
 import UsersPage from './pages/users/Users'
 import LogsPage from './pages/logs/Logs'
@@ -9,6 +10,7 @@ import RolesPage from './pages/roles/Roles'
 import MenusPage from './pages/menus/Menus'
 import ProfilePage from './pages/profile/Profile'
 import { useAuthStore } from './store/auth'
+import { setMessageInstance } from './utils/messageInstance'
 
 const { Sider, Header, Content } = Layout
 
@@ -98,6 +100,12 @@ function AdminLayout() {
 }
 
 function App() {
+  const { message } = AntdApp.useApp()
+
+  useEffect(() => {
+    setMessageInstance(message)
+  }, [message])
+
   return (
     <Routes>
       {/* 独立的登录路由 */}

@@ -5,7 +5,8 @@
 /* 全局布局：让页面铺满视口并去掉滚动条 */
 html,
 body,
-#root {
+#root,
+.ant-app {
   height: 100%;
   margin: 0;
 }
