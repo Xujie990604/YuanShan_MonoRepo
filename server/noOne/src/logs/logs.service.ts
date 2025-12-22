@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Logs } from './logs.entity';
+import { QueryLogsDto } from './dto/query-logs.dto';
 
 @Injectable()
 export class LogsService {
@@ -20,29 +21,29 @@ export class LogsService {
     methods: string;
     data: string;
     result: number;
-    userId?: number; // 改为直接存储 userId
+    userId?: number;
   }): Promise<Logs> {
-
-    
-    try {
-      const log = this.logsRepository.create(logData);
-      const savedLog = await this.logsRepository.save(log);
-      return savedLog;
-    } catch (error) {
-      throw error;
-    }
+    const log = this.logsRepository.create(logData);
+    return await this.logsRepository.save(log);
   }
 
   /**
-   * 查询所有日志
-   * @returns 日志列表
+   * 查询所有日志（分页）
+   * @param query 查询条件
+   * @returns 日志列表和总数
    */
-  findAll(): Promise<Logs[]> {
-    return this.logsRepository.find({
+  async findAll(query: QueryLogsDto) {
+    const { page = 1, limit = 20 } = query;
+
+    const [logs, total] = await this.logsRepository.findAndCount({
       order: {
         id: 'DESC', // 按 ID 倒序，最新的在前面
       },
+      take: limit,
+      skip: (page - 1) * limit,
     });
+
+    return { logs, total };
   }
 
   /**

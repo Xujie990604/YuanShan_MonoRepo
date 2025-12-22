@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { QueryMenusDto } from './dto/query-menus.dto';
 import { Menus } from './menu.entity';
 import { Repository } from 'typeorm';
 
@@ -16,8 +17,23 @@ export class MenusService {
     return this.menuRepository.save(menu);
   }
 
-  findAll() {
-    return this.menuRepository.find();
+  /**
+   * 查询所有菜单（分页）
+   * @param query 查询条件
+   * @returns 菜单列表和总数
+   */
+  async findAll(query: QueryMenusDto) {
+    const { page = 1, limit = 20 } = query;
+
+    const [menus, total] = await this.menuRepository.findAndCount({
+      order: {
+        order: 'ASC', // 按菜单排序字段升序排列
+      },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    return { menus, total };
   }
 
   findOne(id: number) {

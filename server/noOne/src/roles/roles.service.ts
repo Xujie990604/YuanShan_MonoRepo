@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { QueryRolesDto } from './dto/query-roles.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Roles } from './roles.entity';
@@ -17,8 +18,23 @@ export class RolesService {
     return await this.rolesRepository.save(role);
   }
 
-  findAll() {
-    return this.rolesRepository.find();
+  /**
+   * 查询所有角色（分页）
+   * @param query 查询条件
+   * @returns 角色列表和总数
+   */
+  async findAll(query: QueryRolesDto) {
+    const { page = 1, limit = 20 } = query;
+
+    const [roles, total] = await this.rolesRepository.findAndCount({
+      order: {
+        id: 'ASC', // 按ID升序排列
+      },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+
+    return { roles, total };
   }
 
   findOne(id: number) {

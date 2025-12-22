@@ -83,6 +83,10 @@ export class LoggingInterceptor implements NestInterceptor {
             ...logData,
             result: error.status || HttpStatus.INTERNAL_SERVER_ERROR, // 记录错误状态码
           })
+          .catch((logError) => {
+            console.error('[LoggingInterceptor] 日志记录失败:', logError.message);
+          });
+
         // 继续抛出原始异常，不影响正常的异常处理流程
         return throwError(() => error);
       }),

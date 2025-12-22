@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { MenusService } from './menus.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
+import { QueryMenusDto } from './dto/query-menus.dto';
 import { CaslGuard } from 'src/guards/casl.guard';
 import { Can } from 'src/decorators/casl.decorator';
 import { PermissionEnum } from 'src/enum/permission.enum';
@@ -28,8 +30,13 @@ export class MenusController {
   }
 
   @Get()
-  findAll() {
-    return this.menusService.findAll();
+  /**
+   * 查询所有菜单（分页）
+   * @param query 查询条件（page, limit）
+   * @returns 菜单列表和总数
+   */
+  findAll(@Query() query: QueryMenusDto) {
+    return this.menusService.findAll(query);
   }
 
   @Patch(':id')

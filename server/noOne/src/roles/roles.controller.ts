@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { QueryRolesDto } from './dto/query-roles.dto';
 import { CaslGuard } from 'src/guards/casl.guard';
 import { Can } from 'src/decorators/casl.decorator';
 import { PermissionEnum } from 'src/enum/permission.enum';
@@ -19,8 +20,13 @@ export class RolesController {
   }
 
   @Get()
-  findAll() {
-    return this.rolesService.findAll();
+  /**
+   * 查询所有角色（分页）
+   * @param query 查询条件（page, limit）
+   * @returns 角色列表和总数
+   */
+  findAll(@Query() query: QueryRolesDto) {
+    return this.rolesService.findAll(query);
   }
 
   @Patch(':id')
