@@ -1,12 +1,9 @@
 import {
   Column,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { User } from '../user/user.entity';
 
 @Entity()
 export class Logs {
@@ -26,8 +23,7 @@ export class Logs {
   @Column()
   result: number;
 
-  @ManyToOne(() => User, (user) => user.logs)
-  @JoinColumn()
+  @Column({ nullable: true }) // 用户ID，允许为空（未登录用户）
   @Exclude()
-  user: User;
+  userId: number;
 }

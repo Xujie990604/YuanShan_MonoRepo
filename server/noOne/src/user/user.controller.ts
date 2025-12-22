@@ -19,6 +19,7 @@ import { Can } from 'src/decorators/casl.decorator';
 import { PermissionEnum } from 'src/enum/permission.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { BusinessLog } from 'src/decorators/business-log.decorator';
 
 @Controller('user')
 @UseGuards(CaslGuard)
@@ -54,6 +55,7 @@ export class UserController {
 
   @Post()
   @Can(PermissionEnum.USERS_CREATE)
+  @BusinessLog('创建用户')
   /**
    * 创建用户
    * @param dto 用户信息
@@ -66,6 +68,7 @@ export class UserController {
 
   @Patch('/:id')
   @Can(PermissionEnum.USERS_UPDATE)
+  @BusinessLog('更新用户')
   updateUser(
     @Param('id') id: number,
     @Body() dto: UpdateUserDto,
@@ -75,6 +78,7 @@ export class UserController {
 
   @Delete('/:id')
   @Can(PermissionEnum.USERS_DELETE)
+  @BusinessLog('删除用户')
   /**
    * 删除用户
    * @param id 用户 id

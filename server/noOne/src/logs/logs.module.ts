@@ -8,6 +8,8 @@ import * as DailyRotateFile from 'winston-daily-rotate-file';
 import { LogEnum } from '../enum/config.enum';
 import { LogsController } from './logs.controller';
 import { LogsService } from './logs.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Logs } from './logs.entity';
 
 function createDailyRotateTransport(level: string, filename: string) {
   return new DailyRotateFile({
@@ -26,6 +28,7 @@ function createDailyRotateTransport(level: string, filename: string) {
 }
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Logs]),
     WinstonModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -56,5 +59,6 @@ function createDailyRotateTransport(level: string, filename: string) {
   ],
   controllers: [LogsController],
   providers: [LogsService],
+  exports: [LogsService], // 导出 LogsService，使其可以在其他模块中使用
 })
 export class LogsModule {}

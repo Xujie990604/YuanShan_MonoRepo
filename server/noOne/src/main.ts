@@ -9,6 +9,8 @@ import { ConfigEnum } from './enum/config.enum';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { AllExceptionFilter } from './filters/all-exception.filter';
 import { ResponseInterceptor } from './interceptors/response.interceptor';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LogsService } from './logs/logs.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, new ExpressAdapter());
@@ -28,14 +30,16 @@ async function bootstrap() {
 
   const logger = new Logger();
   const reflector = app.get(Reflector);
+  const logsService = app.get(LogsService); // 获取 LogsService 实例
 
   // 全局异常过滤器
   app.useGlobalFilters(new AllExceptionFilter(logger));
 
-  // 全局拦截器（先序列化，再统一返回格式）
+  // 全局拦截器（执行顺序：序列化 -> 业务日志 -> 统一返回格式）
   app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(reflector),
-    new ResponseInterceptor(),
+    new ClassSerializerInterceptor(reflector), // 1. 序列化（去除 @Exclude 字段）
+    new LoggingInterceptor(reflector, logsService), // 2. 业务日志记录
+    new ResponseInterceptor(), // 3. 统一返回格式包装
   );
 
   // 全局管道
