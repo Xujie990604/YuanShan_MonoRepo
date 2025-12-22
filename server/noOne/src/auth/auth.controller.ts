@@ -17,9 +17,10 @@ export class AuthController {
   @Public()
   async signin(@Body() body: SigninUserDto) {
     const { username, password } = body;
-    const token = await this.authService.signin(username, password);
+    const { token, userId } = await this.authService.signin(username, password);
     return {
       access_token: token,
+      userId,
     };
   }
 

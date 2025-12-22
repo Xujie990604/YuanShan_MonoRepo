@@ -17,6 +17,7 @@ export interface IUserLoginRequestData {
  */
 export interface IUserLoginResponseData {
   access_token: string
+  userId: number
 }
 
 /**

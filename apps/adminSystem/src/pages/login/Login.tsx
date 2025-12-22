@@ -29,6 +29,8 @@ function LoginPage() {
   const navigate = useNavigate()
   // 全局登录状态：这里只用到设置 token 的方法，读取时可以在其它组件用 useAuthStore 调用
   const setAccessToken = useAuthStore(state => state.setAccessToken)
+  // 存储登录用户 id（用于个人中心查询）
+  const setUserId = useAuthStore(state => state.setUserId)
 
   /**
    * 登录表单提交回调：
@@ -42,6 +44,7 @@ function LoginPage() {
       if (res.access_token) {
         // 使用 Zustand 全局状态存储 token（内部会同步到 localStorage）
         setAccessToken(res.access_token)
+        setUserId(res.userId)
         message.success('登录成功')
         navigate('/users', { replace: true })
       }

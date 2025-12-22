@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { MenusModule } from './menus/menus.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtGuard } from './guards/jwt.guard';
+import { UploadModule } from './upload/upload.module';
 
 const envFilePath = [
   `.env.${process.env.NODE_ENV || 'development'}`,
@@ -53,6 +54,7 @@ console.log('Loading env files:', envFilePath);
     RolesModule,
     AuthModule,
     MenusModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [

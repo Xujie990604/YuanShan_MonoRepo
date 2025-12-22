@@ -172,3 +172,21 @@ export function deleteUserRequest(id: number, requestConfig?: IRequestConfig) {
   })
 }
 
+/**
+ * 获取用户详情
+ * @param id 用户 id
+ */
+export function getUserByIdRequest(id: number, requestConfig?: IRequestConfig) {
+  return new Promise<IUserInfo>((resolve, reject) => {
+    YSNetwork
+      .get<IUserInfo, IResponseType<IUserInfo>>(
+        {
+          url: `/user/${id}`,
+        },
+        requestConfig,
+      )
+      .then(result => resolve(result))
+      .catch(err => reject(err))
+  })
+}
+

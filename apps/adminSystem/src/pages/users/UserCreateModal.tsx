@@ -1,8 +1,10 @@
-import { Modal, Form, Input, Select, Button, Space, message } from 'antd'
+import { Modal, Form, Input, Select, Button, Space, message, Upload } from 'antd'
+import type { UploadChangeParam, UploadFile } from 'antd/es/upload'
 import { useMutation } from '@tanstack/react-query'
 import type { ICreateUserReq, IUserInfo, IUpdateUserReq } from '../../request/users'
 import { createUserRequest, updateUserRequest } from '../../request/users'
 import { GENDER_OPTIONS, USER_ROLE_OPTIONS } from './type'
+import { normalizePhotoUrl } from '../../utils/url'
 
 type CreateUserFormValues = ICreateUserReq
 
@@ -35,7 +37,10 @@ function UserCreateModal({ open, onCancel, onSuccess, user }: UserCreateModalPro
       }
     : undefined
 
-  // 使用 React Query 的 useMutation 管理“新增用户”这个写操作
+  const photo = Form.useWatch('photo', form)
+  const photoPreviewUrl = normalizePhotoUrl(photo)
+
+  // 使用 React Query 的 useMutation 管理“新增/编辑用户”这个写操作
   const { mutateAsync, isPending } = useMutation({
     mutationFn: (values: CreateUserFormValues) => {
       if (isEdit && user) {
@@ -65,6 +70,41 @@ function UserCreateModal({ open, onCancel, onSuccess, user }: UserCreateModalPro
     if (!isPending) {
       form.resetFields()
       onCancel()
+    }
+  }
+
+  /**
+   * 头像上传回调：
+   * - 假设后端返回的数据结构为 IResponseType<{ url: string }>
+   * - 上传成功后，从 response 中取出 url，写入表单的 photo 字段
+   */
+  const handleAvatarUploadChange = (info: UploadChangeParam<UploadFile>) => {
+    if (info.file.status === 'done') {
+      const resp = info.file.response as any
+
+      // 兼容多种返回结构：
+      // 1) IResponseType<{url}>: { code, message, data: { url } }
+      // 2) { url: '...' }
+      // 3) string(json)
+      let rawUrl: string | undefined =
+        resp?.data?.url ?? resp?.url ?? resp?.data?.data?.url
+
+      if (!rawUrl && typeof resp === 'string') {
+        try {
+          const parsed = JSON.parse(resp)
+          rawUrl = parsed?.data?.url ?? parsed?.url
+        } catch {
+          // ignore
+        }
+      }
+
+      // 注意：表单 photo 字段只存“后端返回的原始值”，预览时再 normalize
+      if (rawUrl) {
+        form.setFieldsValue({ photo: rawUrl })
+        message.success('头像上传成功')
+      } else {
+        message.warning('上传成功但未获取到可用的头像地址，请检查后端返回值')
+      }
     }
   }
 
@@ -112,9 +152,36 @@ function UserCreateModal({ open, onCancel, onSuccess, user }: UserCreateModalPro
             />
           </Form.Item>
 
-          {/* 头像 */}
-          <Form.Item label="头像地址" name="photo" style={{ flex: 1, marginBottom: 0 }}>
-            <Input placeholder="请输入头像 URL（可选）" allowClear />
+          {/* 头像：上传 + 预览 + URL 输入 */}
+          <Form.Item label="头像" style={{ flex: 1, marginBottom: 0 }}>
+            <Space align="start">
+              <Upload
+                name="file"
+                listType="picture-card"
+                showUploadList={false}
+                action="/api/v1/upload/avatar" // 假设的头像上传接口，后端按需实现
+                onChange={handleAvatarUploadChange}
+              >
+                {photoPreviewUrl ? (
+                  <img
+                    src={photoPreviewUrl}
+                    alt="avatar"
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 8,
+                      objectFit: 'cover',
+                    }}
+                  />
+                ) : (
+                  <div style={{ fontSize: 12 }}>上传头像</div>
+                )}
+              </Upload>
+              {/* URL 输入框：允许手动粘贴图片地址 */}
+              <Form.Item name="photo" noStyle>
+                <Input placeholder="或粘贴图片 URL" allowClear style={{ width: 200 }} />
+              </Form.Item>
+            </Space>
           </Form.Item>
         </Space>
 

@@ -78,7 +78,26 @@ export class UserService {
    * @returns 用户
    */
   findOneById(id: number) {
-    return this.userRepository.findOne({ where: { id } });
+    return this.userRepository.findOne({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        profile: {
+          gender: true,
+          photo: true,
+          address: true,
+        },
+        roles: {
+          id: true,
+          name: true,
+        },
+      },
+      relations: {
+        profile: true,
+        roles: true,
+      },
+    });
   }
 
   /**

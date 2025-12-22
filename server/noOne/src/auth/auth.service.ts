@@ -14,7 +14,7 @@ export class AuthService {
    * 登录
    * @param username 用户名
    * @param password 密码
-   * @returns 令牌
+   * @returns 令牌与用户 id
    */
   async signin(username: string, password: string) {
     const user = await this.userService.findOne(username);
@@ -28,7 +28,8 @@ export class AuthService {
     }
 
     const payload = { username: user.username, sub: user.id };
-    return await this.jwtService.signAsync(payload);
+    const token = await this.jwtService.signAsync(payload);
+    return { token, userId: user.id };
   }
 
   /**

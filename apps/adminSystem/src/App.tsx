@@ -7,6 +7,7 @@ import UsersPage from './pages/users/Users'
 import LogsPage from './pages/logs/Logs'
 import RolesPage from './pages/roles/Roles'
 import MenusPage from './pages/menus/Menus'
+import ProfilePage from './pages/profile/Profile'
 import { useAuthStore } from './store/auth'
 
 const { Sider, Header, Content } = Layout
@@ -15,9 +16,14 @@ function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const setAccessToken = useAuthStore(state => state.setAccessToken)
+  const setUserId = useAuthStore(state => state.setUserId)
   const selectedKey = location.pathname.split('/')[1] || 'users'
 
   const userMenuItems = [
+    {
+      key: 'profile',
+      label: '个人信息',
+    },
     {
       key: 'logout',
       label: '退出登录',
@@ -25,9 +31,14 @@ function AdminLayout() {
   ]
 
   const handleUserMenuClick = ({ key }: { key: string }) => {
+    if (key === 'profile') {
+      navigate('/profile')
+      return
+    }
     if (key === 'logout') {
       // 清空全局登录状态（内部会同步移除 localStorage 中的 token）
       setAccessToken(null)
+      setUserId(null)
       navigate('/login', { replace: true })
     }
   }
@@ -51,7 +62,7 @@ function AdminLayout() {
         >
           <div style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
             <Avatar size={32} icon={<UserOutlined />} />
-          </div>
+  </div>
         </Dropdown>
       </Header>
       {/* 左侧 Sider 区域 */}
@@ -77,6 +88,7 @@ function AdminLayout() {
             <Route path="/logs" element={<LogsPage />} />
             <Route path="/roles" element={<RolesPage />} />
             <Route path="/menus" element={<MenusPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/users" replace />} />
           </Routes>
         </Content>

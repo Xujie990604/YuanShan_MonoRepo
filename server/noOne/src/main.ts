@@ -17,6 +17,10 @@ async function bootstrap() {
   const staticPath = path.resolve(__dirname, '..', '..', 'blog');
   app.use('/static', express.static(staticPath));
 
+  // 配置头像静态资源目录：uploads/avatar -> /static/avatar
+  const avatarStaticPath = path.resolve(process.cwd(), 'uploads', 'avatar');
+  app.use('/static/avatar', express.static(avatarStaticPath));
+
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   // 设置全局前缀
