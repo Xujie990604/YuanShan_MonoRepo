@@ -1,0 +1,40 @@
+{
+  // Tailwind CSS IntelliSense 在 monorepo 中的配置
+  "tailwindCSS.experimental.configFile": {
+    "apps/keyDoWeb/**": "apps/keyDoWeb/tailwind.config.js",
+    "apps/adminSystem/**": "apps/adminSystem/tailwind.config.js"
+  },
+  
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ngClass",
+    "class:list"
+  ],
+  
+  // 启用字符串中的自动补全（重要！）
+  "editor.quickSuggestions": {
+    "strings": true
+  },
+  
+  // 关闭对 Tailwind 指令的 CSS 验证警告
+  "css.validate": false,
+  "scss.validate": false,
+  
+  // 文件关联
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  
+  // 启用 Tailwind CSS 的 Hover 提示
+  "tailwindCSS.validate": true,
+  "tailwindCSS.emmetCompletions": true,
+  "tailwindCSS.showPixelEquivalents": true,
+  "tailwindCSS.colorDecorators": true
+}
+
