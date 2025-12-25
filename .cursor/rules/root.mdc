@@ -35,3 +35,4 @@ alwaysApply: true
 1. 这是 monorepo，依赖管理需要特别注意
 2. Node.js 版本使用 20.x（项目使用 nvm）
 3. 包管理器使用 pnpm，不要使用 npm 或 yarn
+4. 需要执行指令时，最好由开发者手动执行，不要 AI 直接执行

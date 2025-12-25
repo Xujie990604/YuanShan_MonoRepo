@@ -1,7 +1,7 @@
 /**
  * 认证相关 Hooks
  */
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import * as authApi from '@/api/auth'
 import { queryKeys } from './query-keys'

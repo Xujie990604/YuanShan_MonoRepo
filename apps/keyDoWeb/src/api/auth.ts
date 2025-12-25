@@ -2,43 +2,19 @@
  * 认证相关 API
  */
 import { apiClient } from '@/lib/axios'
-
-/**
- * 登录请求参数
- */
-export interface LoginRequest {
-  username: string
-  password: string
-}
-
-/**
- * 登录响应数据
- */
-export interface LoginResponse {
-  access_token: string
-  userId: number
-}
-
-/**
- * 注册请求参数
- */
-export interface SignupRequest {
-  username: string
-  password: string
-  nickname?: string
-}
+import type { SigninInput, SigninResponse, SignupInput, SignupResponse } from '@yuan-shan/keydo-contract'
 
 /**
  * 用户登录
  */
-export function login(data: LoginRequest): Promise<LoginResponse> {
+export function login(data: SigninInput): Promise<SigninResponse> {
   return apiClient.post('/auth/signin', data)
 }
 
 /**
  * 用户注册
  */
-export function signup(data: SignupRequest) {
+export function signup(data: SignupInput): Promise<SignupResponse> {
   return apiClient.post('/auth/signup', data)
 }
 
@@ -47,6 +23,13 @@ export function signup(data: SignupRequest) {
  */
 export function logout() {
   return apiClient.post('/auth/logout')
+}
+
+/**
+ * 获取当前用户信息
+ */
+export function getCurrentUser() {
+  return apiClient.get('/auth/me')
 }
 
 
