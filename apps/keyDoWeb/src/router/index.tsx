@@ -3,11 +3,16 @@ import App from '@/App'
 import HomePage from '@/pages/home'
 import LoginPage from '@/pages/auth/login'
 import SignupPage from '@/pages/auth/signup'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: (
+      <ProtectedRoute>
+        <App />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,

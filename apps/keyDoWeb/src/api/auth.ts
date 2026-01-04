@@ -2,7 +2,7 @@
  * 认证相关 API
  */
 import { apiClient } from '@/lib/axios'
-import type { SigninInput, SigninResponse, SignupInput, SignupResponse } from '@yuan-shan/keydo-contract'
+import type { SigninInput, SigninResponse, SignupInput, SignupResponse, UserInfo } from '@yuan-shan/keydo-contract'
 
 /**
  * 用户登录
@@ -28,8 +28,8 @@ export function logout() {
 /**
  * 获取当前用户信息
  */
-export function getCurrentUser() {
-  return apiClient.get('/auth/me')
+export function getCurrentUser(): Promise<UserInfo> {
+  return apiClient.get('/user/profile')
 }
 
 

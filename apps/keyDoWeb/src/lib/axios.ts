@@ -3,12 +3,13 @@
  * 提供基础的 HTTP 请求能力
  */
 import axios, { type AxiosError } from 'axios'
+import { useAuthStore } from '@/store/auth'
 
 /**
  * 创建 axios 实例
  */
 export const apiClient = axios.create({
-  baseURL: '/api/v1',
+  baseURL: 'http://localhost:6040/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -20,7 +21,7 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token')
+    const token = useAuthStore.getState().token
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -52,7 +53,14 @@ apiClient.interceptors.response.use(
     })
   },
   (error: AxiosError) => {
-    // HTTP 错误
+    // 401 未授权，清除 token 并跳转登录页
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearAuth()
+      // 避免在非浏览器环境报错
+      if (typeof window !== 'undefined') {
+        window.location.href = '/auth/login'
+      }
+    }
     return Promise.reject(error)
   }
 )

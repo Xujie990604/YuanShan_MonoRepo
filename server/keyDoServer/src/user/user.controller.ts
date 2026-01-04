@@ -5,6 +5,11 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  /**
+   * 
+   * @param req 请求对象
+   * @returns 用户个人信息
+   */
   @Get('profile')
   async getProfile(@Req() req) {
     return this.userService.findById(req.user.userId);

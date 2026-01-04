@@ -1,7 +1,3 @@
-/**
- * 注册页面（使用 shadcn/ui Form）
- * 演示：UI 字段和接口字段不一致时，如何用 react-hook-form + zod 优雅处理
- */
 import { Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,7 +5,7 @@ import { signupSchema, type SignupInput } from '@yuan-shan/keydo-contract'
 import { z } from 'zod'
 import { useSignup } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -19,14 +15,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import { User, Lock } from 'lucide-react'
+import Logo from '@/components/Logo'
 
-/**
- * 🎯 UI 表单的 schema（扩展了 contract 的 schema）
- * 
- * 场景：注册表单有"确认密码"字段，但后端接口不需要这个字段
- * 
- * 方案：基于 contract 的 signupSchema，使用 .extend() 扩展 UI 专属字段
- */
 const signupFormSchema = signupSchema
   .extend({
     // UI 专属字段：确认密码
@@ -45,9 +36,9 @@ type SignupFormData = z.infer<typeof signupFormSchema>
 export default function SignupPage() {
   const signup = useSignup()
   
-  // 🎯 使用 react-hook-form + zod（扩展后的 schema）
+  // 使用 react-hook-form + zod（扩展后的 schema）
   const form = useForm<SignupFormData>({
-    resolver: zodResolver(signupFormSchema), // 使用扩展后的 schema
+    resolver: zodResolver(signupFormSchema),
     defaultValues: {
       username: '',
       password: '',
@@ -57,113 +48,146 @@ export default function SignupPage() {
   
   // 提交处理
   const onSubmit = form.handleSubmit((data) => {
-    // 🎯 关键：从 UI 表单数据转换为接口数据
+    // 从 UI 表单数据转换为接口数据
     // 过滤掉 UI 独有的 confirmPassword 字段
     const apiData: SignupInput = {
       username: data.username,
       password: data.password,
-      // 注意：不传 confirmPassword
     }
     
     signup.mutate(apiData)
   })
   
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted/30">
-      <Card className="w-full max-w-md p-8">
-        <div className="space-y-6">
-          {/* 标题 */}
-          <div className="text-center space-y-2">
-            <h1 className="text-3xl font-bold">创建账户</h1>
-            <p className="text-muted-foreground">注册新用户</p>
+    <main className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* 极简几何装饰 */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute top-20 left-10 w-64 h-64 border border-border/30 rounded-sm rotate-12" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 border border-border/20 rounded-sm -rotate-6" />
+      </div>
+
+      <Card className="w-full max-w-md shadow-lg border-border/50">
+        <CardHeader className="space-y-4 pb-6">
+          <div className="flex flex-col items-center gap-4">
+            {/* 四象限 Logo */}
+            <Logo />
+
+            <div className="text-center space-y-2">
+              <CardTitle className="text-2xl font-semibold tracking-tight text-foreground">
+                创建账号
+              </CardTitle>
+              <CardDescription className="text-muted-foreground">
+                开始使用要事优先任务管理系统
+              </CardDescription>
+            </div>
           </div>
-          
-          {/* 注册表单 */}
+        </CardHeader>
+
+        <CardContent>
           <Form {...form}>
-            <form onSubmit={onSubmit} className="space-y-4">
-              {/* 用户名 */}
+            <form onSubmit={onSubmit} className="space-y-5">
+              {/* 用户名字段 */}
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>用户名</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      用户名
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="3-20个字符"
-                        disabled={signup.isPending}
-                        {...field}
-                      />
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="请输入用户名"
+                          disabled={signup.isPending}
+                          className="pl-10"
+                          {...field}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              {/* 密码 */}
+
+              {/* 密码字段 */}
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>密码</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      密码
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="6-20个字符"
-                        disabled={signup.isPending}
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="6-20个字符"
+                          disabled={signup.isPending}
+                          className="pl-10"
+                          {...field}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              {/* 确认密码（UI 独有字段） */}
+
+              {/* 确认密码字段 */}
               <FormField
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>确认密码</FormLabel>
+                    <FormLabel className="text-sm font-medium text-foreground">
+                      确认密码
+                    </FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="再次输入密码"
-                        disabled={signup.isPending}
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="password"
+                          placeholder="再次输入密码"
+                          disabled={signup.isPending}
+                          className="pl-10"
+                          {...field}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               {/* 提交按钮 */}
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full font-medium"
+                size="lg"
                 disabled={signup.isPending}
               >
-                {signup.isPending ? '注册中...' : '注册'}
+                {signup.isPending ? '注册中...' : '创建账号'}
               </Button>
+
+              {/* 登录链接 */}
+              <div className="text-center pt-2">
+                <Link
+                  to="/auth/login"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  已有账号？
+                  <span className="underline underline-offset-4 ml-1">立即登录</span>
+                </Link>
+              </div>
             </form>
           </Form>
-          
-          {/* 登录链接 */}
-          <div className="text-center text-sm">
-            <span className="text-muted-foreground">已有账户？</span>
-            <Link
-              to="/auth/login"
-              className="text-primary hover:underline ml-1"
-            >
-              立即登录
-            </Link>
-          </div>
-        </div>
+        </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }
 

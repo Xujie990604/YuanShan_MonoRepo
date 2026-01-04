@@ -47,3 +47,12 @@ export type SignupResponse = {
     id: number;
     username: string;
 };
+/**
+ * 用户信息类型
+ */
+export type UserInfo = {
+    id: number;
+    username: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
