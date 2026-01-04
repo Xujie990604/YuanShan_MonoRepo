@@ -9,7 +9,10 @@ import { useAuthStore } from '@/store/auth'
  * 创建 axios 实例
  */
 export const apiClient = axios.create({
-  baseURL: 'http://localhost:6040/api/v1',
+  // 使用相对路径，通过 Vite 代理转发到后端
+  // 开发环境：Vite 会将 /api/v1 代理到 http://localhost:6040/api/v1
+  // 生产环境：需要配置 Nginx 或其他反向代理
+  baseURL: '/api/v1',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
