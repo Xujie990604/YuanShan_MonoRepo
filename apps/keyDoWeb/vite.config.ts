@@ -18,7 +18,7 @@ export default defineConfig({
       '/api/v1': {
         target: 'http://localhost:6040', // 后端服务器地址
         changeOrigin: true, // 改变请求头中的 origin
-        secure: false, // 如果是 https 接口，需要配置这个参数
+        secure: false, // 允许自签名证书
         // 不需要重写路径，因为后端已经有全局前缀 api/v1
         // 如果后端没有全局前缀，可以使用 rewrite: (path) => path.replace(/^\/api\/v1/, '')
       },
