@@ -1,4 +1,4 @@
-import type { Task } from '@/types/task'
+import type { Task } from '@yuan-shan/keydo-contract'
 
 /**
  * localStorage 存储的键名

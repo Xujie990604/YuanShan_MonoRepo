@@ -2,7 +2,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Checkbox } from '@/components/ui/checkbox'
 import TaskContextMenu from './TaskContextMenu'
-import type { Task } from '@/types/task'
+import type { Task } from '@yuan-shan/keydo-contract'
 import { cn } from '@/lib/utils'
 
 /**

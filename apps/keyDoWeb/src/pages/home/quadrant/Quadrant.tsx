@@ -4,8 +4,8 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import TaskCard from './TaskCard'
 import AddTaskDialog from './AddTaskDialog'
-import type { Task, QuadrantType } from '@/types/task'
-import { QUADRANT_CONFIGS } from '@/types/task'
+import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+import { QUADRANT_CONFIGS } from './config'
 import { cn } from '@/lib/utils'
 
 interface QuadrantProps {

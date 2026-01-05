@@ -1,14 +1,8 @@
-export type QuadrantType = 'Q1' | 'Q2' | 'Q3' | 'Q4'
+import type { QuadrantType } from '@yuan-shan/keydo-contract'
 
-export interface Task {
-  id: string 
-  title: string
-  quadrant: QuadrantType
-  completed: boolean
-  createdAt: string // ISO 8601 格式
-  updatedAt: string // ISO 8601 格式
-}
-
+/**
+ * 象限配置（前端 UI 配置）
+ */
 export interface QuadrantConfig {
   id: QuadrantType
   label: string
@@ -16,6 +10,9 @@ export interface QuadrantConfig {
   description: string
 }
 
+/**
+ * 象限配置数组
+ */
 export const QUADRANT_CONFIGS: QuadrantConfig[] = [
   {
     id: 'Q1',

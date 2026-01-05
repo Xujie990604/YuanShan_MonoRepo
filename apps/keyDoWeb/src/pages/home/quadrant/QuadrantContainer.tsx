@@ -17,8 +17,8 @@ import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import Quadrant from './Quadrant'
-import type { Task, QuadrantType } from '@/types/task'
-import { QUADRANT_CONFIGS } from '@/types/task'
+import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+import { QUADRANT_CONFIGS } from './config'
 import { loadTasksFromStorage, saveTasksToStorage, generateTaskId } from '@/lib/task-storage'
 
 /**
