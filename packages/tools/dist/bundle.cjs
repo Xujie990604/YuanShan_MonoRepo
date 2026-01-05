@@ -1,4 +1,6 @@
-import { LexoRank } from 'lexorank';
+'use strict';
+
+var lexorank = require('lexorank');
 
 /**
  * 工具函数
@@ -23,21 +25,21 @@ function add(num1, num2) {
 function getRankBetween(prev, next) {
     if (prev === null && next === null) {
         // 第一个元素，返回中间值
-        return LexoRank.middle().toString();
+        return lexorank.LexoRank.middle().toString();
     }
     if (prev === null) {
         // 插入到最前面
-        const nextRank = LexoRank.parse(next);
+        const nextRank = lexorank.LexoRank.parse(next);
         return nextRank.genPrev().toString();
     }
     if (next === null) {
         // 插入到最后面
-        const prevRank = LexoRank.parse(prev);
+        const prevRank = lexorank.LexoRank.parse(prev);
         return prevRank.genNext().toString();
     }
     // 插入到中间
-    const prevRank = LexoRank.parse(prev);
-    const nextRank = LexoRank.parse(next);
+    const prevRank = lexorank.LexoRank.parse(prev);
+    const nextRank = lexorank.LexoRank.parse(next);
     return prevRank.between(nextRank).toString();
 }
 /**
@@ -45,8 +47,10 @@ function getRankBetween(prev, next) {
  * @returns 初始排序值（字符串）
  */
 function getInitialRank() {
-    return LexoRank.middle().toString();
+    return lexorank.LexoRank.middle().toString();
 }
 
-export { add, getInitialRank, getRankBetween };
-//# sourceMappingURL=bundle.esm.js.map
+exports.add = add;
+exports.getInitialRank = getInitialRank;
+exports.getRankBetween = getRankBetween;
+//# sourceMappingURL=bundle.cjs.map

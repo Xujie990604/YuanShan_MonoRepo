@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { TaskModule } from './task/task.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     PrismaModule,
     AuthModule,
     UserModule,
+    TaskModule,
   ],
   providers: [
     {

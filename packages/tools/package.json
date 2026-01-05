@@ -1,20 +1,41 @@
 {
   "name": "@yuan-shan/tools",
+  "version": "0.1.0",
+  "description": "YuanShan 项目共享工具函数库",
   "type": "module",
-  "module": "dist/bundle.esm.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/bundle.cjs",
+  "module": "./dist/bundle.esm.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "development": "./src/index.ts",
       "import": "./dist/bundle.esm.js",
+      "require": "./dist/bundle.cjs",
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "dependencies": {
+    "lexorank": "^1.0.5"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^12.1.2",
-    "tslib": "^2.8.1"
-  }
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {},
+  "keywords": [
+    "tools",
+    "utilities",
+    "lexorank"
+  ],
+  "license": "MIT"
 }

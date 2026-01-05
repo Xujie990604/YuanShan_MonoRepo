@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import TaskCard from './TaskCard'
@@ -23,7 +24,8 @@ interface QuadrantProps {
  * 1. 显示象限内的任务列表
  * 2. 支持添加任务（带表单验证）
  * 3. 支持作为拖拽目标（使用 @dnd-kit 的 useDroppable）
- * 4. 任务分组显示（未完成/已完成）
+ * 4. 支持象限内任务排序（使用 SortableContext）
+ * 5. 任务分组显示（未完成/已完成）
  */
 export default function Quadrant({
   quadrantId,
@@ -32,59 +34,49 @@ export default function Quadrant({
   onDelete,
   onAddTask,
 }: QuadrantProps) {
-  // ========== React Hooks：组件内部状态 ==========
-  
-  /**
-   * isDialogOpen: 控制添加任务对话框的显示/隐藏
-   */
   const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   // ========== @dnd-kit 拖拽目标功能 ==========
   
   /**
-   * useDroppable Hook：使元素可以作为拖拽目标
-   * 
-   * 返回值说明：
-   * - setNodeRef: 设置拖拽目标的 DOM 引用
-   * - isOver: 是否有元素正在拖拽到此目标上方（boolean）
-   * 
-   * 参数：
-   * - id: 拖拽目标的唯一标识（使用象限 ID）
-   * 
-   * 作用：
-   * - 当任务拖拽到此象限上方时，isOver 为 true
-   * - 可以用于显示高亮效果
+   * useDroppable Hook：使象限可以作为拖拽目标
+   * - 用于跨象限拖拽
    */
   const { setNodeRef, isOver } = useDroppable({
-    id: quadrantId,  // 使用象限 ID 作为拖拽目标标识
+    id: quadrantId,
   })
 
   // ========== 数据处理 ==========
   
-  /**
-   * 查找象限配置信息（背景色、标签等）
-   * 
-   * find 方法：查找数组中第一个满足条件的元素
-   * ! 操作符：TypeScript 非空断言，表示结果一定不为 undefined
-   */
   const config = QUADRANT_CONFIGS.find((c) => c.id === quadrantId)!
   
   /**
-   * 筛选未完成任务
-   * filter 方法：返回新数组，只包含 completed 为 false 的任务
+   * 筛选未完成任务并按 order 排序
    */
-  const incompleteTasks = tasks.filter((t) => !t.completed)
-  
+  const incompleteTasks = useMemo(() => {
+    return tasks
+      .filter((t) => !t.completed)
+      .sort((a, b) => a.order.localeCompare(b.order))
+  }, [tasks])
+
   /**
-   * 筛选已完成任务
-   * filter 方法：返回新数组，只包含 completed 为 true 的任务
+   * 筛选已完成任务并按 order 排序
    */
-  const completedTasks = tasks.filter((t) => t.completed)
+  const completedTasks = useMemo(() => {
+    return tasks
+      .filter((t) => t.completed)
+      .sort((a, b) => a.order.localeCompare(b.order))
+  }, [tasks])
+
+  /**
+   * 获取未完成任务 ID 数组（用于 SortableContext）
+   */
+  const incompleteTaskIds = useMemo(() => {
+    return incompleteTasks.map((t) => t.id)
+  }, [incompleteTasks])
 
   /**
    * 处理添加任务确认
-   * 
-   * @param title 任务标题
    */
   const handleAddTaskConfirm = (title: string) => {
     onAddTask(quadrantId, title)
@@ -118,21 +110,27 @@ export default function Quadrant({
 
       {/* 象限内容 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* 未完成任务 */}
+        {/* 未完成任务列表（支持排序） */}
         {incompleteTasks.length > 0 && (
-          <div className="space-y-2">
-            {incompleteTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onToggleComplete={onToggleComplete}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
+          <SortableContext
+            items={incompleteTaskIds}
+            strategy={verticalListSortingStrategy}
+            id={`${quadrantId}-incomplete`}
+          >
+            <div className="space-y-2">
+              {incompleteTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onToggleComplete={onToggleComplete}
+                  onDelete={onDelete}
+                />
+              ))}
+            </div>
+          </SortableContext>
         )}
 
-        {/* 已完成任务 */}
+        {/* 已完成任务列表（不支持排序，只显示） */}
         {completedTasks.length > 0 && (
           <div className="space-y-2">
             <div className="text-xs text-muted-foreground font-medium">

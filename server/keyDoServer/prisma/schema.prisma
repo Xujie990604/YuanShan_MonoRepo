@@ -15,7 +15,24 @@ model User {
   password  String   @db.VarChar(255)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  tasks     Task[]
 
   @@map("users")
 }
 
+model Task {
+  id        String   @id @default(uuid())
+  userId    Int      @map("user_id")
+  title     String   @db.VarChar(255)
+  quadrant  String   @db.VarChar(2) // Q1, Q2, Q3, Q4
+  completed Boolean  @default(false)
+  order     String   @db.VarChar(255) // lexorank 排序值
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, quadrant])
+  @@index([userId, order])
+  @@map("tasks")
+}

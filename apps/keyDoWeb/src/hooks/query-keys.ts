@@ -8,5 +8,10 @@ export const queryKeys = {
   auth: {
     currentUser: () => ['auth', 'current-user'] as const,
   },
+  // 任务相关
+  tasks: {
+    all: () => ['tasks'] as const,
+    list: () => ['tasks', 'list'] as const,
+  },
 } as const
 

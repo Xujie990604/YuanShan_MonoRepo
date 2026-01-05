@@ -5,6 +5,5 @@
  * @returns 相加的结果
  */
 export function add(num1: number, num2: number): number {
-  console.log('tools子包的add方法')
   return num1 + num2
 }
