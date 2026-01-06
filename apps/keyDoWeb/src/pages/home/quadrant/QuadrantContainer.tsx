@@ -36,7 +36,7 @@ export default function QuadrantContainer() {
   // ========== 拖拽状态 ==========
   
   /**
-   * activeTask: 当前正在拖拽的任务
+   * activeTask: 当前正在拖拽的任务（用于 DragOverlay 显示）
    */
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
@@ -79,10 +79,10 @@ export default function QuadrantContainer() {
   
   /**
    * 拖拽开始事件处理
+   * 只记录当前拖拽的任务，用于 DragOverlay 显示
    */
   const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event
-    const task = tasks.find((t) => t.id === active.id)
+    const task = tasks.find((t) => t.id === event.active.id)
     if (task) {
       setActiveTask(task)
     }
@@ -91,9 +91,10 @@ export default function QuadrantContainer() {
   /**
    * 拖拽结束事件处理
    * 
-   * 处理逻辑：
-   * 1. 跨象限拖拽：更新任务的 quadrant（order 由服务端计算）
-   * 2. 象限内排序：计算新的 order 值并更新
+   * 核心逻辑：
+   * 1. 从原始 tasks 获取 draggedTask（最可靠的数据源）
+   * 2. 通过 over.id 判定最终落点象限
+   * 3. 严格区分跨象限和同象限排序，一次只做一件事
    */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -105,77 +106,53 @@ export default function QuadrantContainer() {
     const draggedTask = tasks.find((t) => t.id === taskId)
     if (!draggedTask) return
 
-    // 判断 over.id 是象限 ID 还是任务 ID
-    const isQuadrantId = QUADRANT_CONFIGS.some((config) => config.id === over.id)
-    
-    if (isQuadrantId) {
-      // 情况1：拖拽到象限上（跨象限拖拽）
-      const targetQuadrant = over.id as QuadrantType
-      
-      if (draggedTask.quadrant !== targetQuadrant) {
-        // 象限改变，更新象限（order 由服务端计算）
-        updateTaskMutation.mutate({
-          id: taskId,
-          data: {
-            quadrant: targetQuadrant,
-          },
-        })
-      }
-    } else {
-      // 情况2：拖拽到任务上（象限内排序）
-      const targetTaskId = over.id as string
-      const targetTask = tasks.find((t) => t.id === targetTaskId)
-      
-      if (!targetTask) return
-      
-      // 必须是同一象限内的排序
-      if (draggedTask.quadrant !== targetTask.quadrant) {
-        // 如果象限不同，按跨象限处理
-        updateTaskMutation.mutate({
-          id: taskId,
-          data: {
-            quadrant: targetTask.quadrant,
-          },
-        })
-        return
-      }
+    // 1. 确定最终落点象限（如果是任务 ID 则找其 quadrant）
+    const isContainer = QUADRANT_CONFIGS.some((c) => c.id === over.id)
+    const finalQuadrant = isContainer 
+      ? (over.id as QuadrantType) 
+      : tasks.find((t) => t.id === over.id)?.quadrant
 
-      // 同一象限内排序：计算新的 order 值
+    if (!finalQuadrant) return
+
+    // 2. 逻辑分路
+    if (draggedTask.quadrant !== finalQuadrant) {
+      // 跨象限：只需发送 quadrant，后端自动处理排在末尾
+      updateTaskMutation.mutate({
+        id: taskId,
+        data: { quadrant: finalQuadrant },
+      })
+    } else if (!isContainer && active.id !== over.id) {
+      // 同象限：且拖拽到了具体任务上，处理排序
+      const targetTaskId = over.id as string
+      
+      // 获取当前象限内排好序的非完成任务
       const quadrantTasks = tasks
-        .filter((t) => t.quadrant === draggedTask.quadrant && !t.completed)
+        .filter((t) => t.quadrant === finalQuadrant && !t.completed)
         .sort((a, b) => a.order.localeCompare(b.order))
 
       const draggedIndex = quadrantTasks.findIndex((t) => t.id === taskId)
       const targetIndex = quadrantTasks.findIndex((t) => t.id === targetTaskId)
 
-      // 如果位置没变，不需要更新
-      if (draggedIndex === targetIndex) return
+      if (draggedIndex !== -1 && targetIndex !== -1 && draggedIndex !== targetIndex) {
+        // 计算新的 LexoRank
+        let newOrder: string
+        if (targetIndex === 0) {
+          newOrder = getRankBetween(null, quadrantTasks[0].order)
+        } else if (targetIndex === quadrantTasks.length - 1) {
+          newOrder = getRankBetween(quadrantTasks[quadrantTasks.length - 1].order, null)
+        } else {
+          // 移动到中间：取目标位置的前一个和后一个任务的 order
+          const prevTask = quadrantTasks[targetIndex - 1]
+          const nextTask = quadrantTasks[targetIndex]
+          newOrder = getRankBetween(prevTask.order, nextTask.order)
+        }
 
-      // 计算新的 order 值
-      let newOrder: string
-
-      if (targetIndex === 0) {
-        // 移动到最前面
-        const firstTask = quadrantTasks[0]
-        newOrder = getRankBetween(null, firstTask.order)
-      } else if (targetIndex === quadrantTasks.length - 1) {
-        // 移动到最后面
-        const lastTask = quadrantTasks[quadrantTasks.length - 1]
-        newOrder = getRankBetween(lastTask.order, null)
-      } else {
-        // 移动到中间
-        const prevTask = quadrantTasks[targetIndex - 1]
-        const nextTask = quadrantTasks[targetIndex]
-        newOrder = getRankBetween(prevTask.order, nextTask.order)
+        // 持久化排序
+        updateTaskMutation.mutate({
+          id: taskId,
+          data: { order: newOrder },
+        })
       }
-
-      // 更新任务的 order
-      updateTaskMutation.mutate({
-        id: taskId,
-        data: {
-          order: newOrder,
-        },
-      })
     }
   }
 
