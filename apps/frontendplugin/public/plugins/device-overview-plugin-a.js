@@ -73,6 +73,12 @@ class DeviceOverviewPluginA extends HTMLElement {
         }
         .ip-value {
           font-family: 'Courier New', monospace;
+          cursor: pointer;
+          text-decoration: underline;
+          transition: opacity 0.2s;
+        }
+        .ip-value:hover {
+          opacity: 0.8;
         }
         .camera-grid {
           grid-column: 1 / -1;
@@ -170,6 +176,12 @@ class DeviceOverviewPluginA extends HTMLElement {
         }
         .ip-value {
           font-family: 'Courier New', monospace;
+          cursor: pointer;
+          text-decoration: underline;
+          transition: opacity 0.2s;
+        }
+        .ip-value:hover {
+          opacity: 0.8;
         }
         .camera-grid {
           grid-column: 1 / -1;
@@ -196,7 +208,7 @@ class DeviceOverviewPluginA extends HTMLElement {
       <div class="content">
         <div class="card">
           <div class="card-title">IP 地址</div>
-          <div class="card-value ip-value">${data.deviceInfo.ip}:${data.deviceInfo.port}</div>
+          <div class="card-value ip-value" data-ip="${data.deviceInfo.ip}" data-port="${data.deviceInfo.port}">${data.deviceInfo.ip}:${data.deviceInfo.port}</div>
         </div>
         <div class="card">
           <div class="card-title">服务器时间</div>
@@ -227,6 +239,24 @@ class DeviceOverviewPluginA extends HTMLElement {
         </div>
       </div>
     `;
+    
+    // 绑定 IP 地址点击事件
+    const ipElement = container.querySelector('.ip-value');
+    if (ipElement) {
+      ipElement.addEventListener('click', () => {
+        // 触发自定义事件，通知主应用
+        this.dispatchEvent(new CustomEvent('ip-click', {
+          detail: {
+            ip: data.deviceInfo.ip,
+            port: data.deviceInfo.port,
+            serverId: data.deviceInfo.id,
+            serverName: data.deviceInfo.name
+          },
+          bubbles: true, // 允许事件冒泡到主应用
+          composed: true // 允许事件穿透 Shadow DOM
+        }));
+      });
+    }
   }
 }
 

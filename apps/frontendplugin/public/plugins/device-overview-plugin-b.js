@@ -89,6 +89,15 @@ class DeviceOverviewPluginB extends HTMLElement {
           text-align: right;
           flex: 1;
         }
+        .info-value.ip-clickable {
+          cursor: pointer;
+          text-decoration: underline;
+          color: #ff6b6b;
+          transition: opacity 0.2s;
+        }
+        .info-value.ip-clickable:hover {
+          opacity: 0.8;
+        }
         .camera-section {
           margin-top: 10px;
           padding-top: 10px;
@@ -249,6 +258,15 @@ class DeviceOverviewPluginB extends HTMLElement {
           text-align: right;
           flex: 1;
         }
+        .info-value.ip-clickable {
+          cursor: pointer;
+          text-decoration: underline;
+          color: #ff6b6b;
+          transition: opacity 0.2s;
+        }
+        .info-value.ip-clickable:hover {
+          opacity: 0.8;
+        }
         .camera-section {
           margin-top: 10px;
           padding-top: 10px;
@@ -320,7 +338,7 @@ class DeviceOverviewPluginB extends HTMLElement {
       <ul class="info-list">
         <li class="info-item">
           <span class="info-label">IP 地址</span>
-          <span class="info-value">${data.deviceInfo.ip}:${data.deviceInfo.port}</span>
+          <span class="info-value ip-clickable" data-ip="${data.deviceInfo.ip}" data-port="${data.deviceInfo.port}">${data.deviceInfo.ip}:${data.deviceInfo.port}</span>
         </li>
         <li class="info-item">
           <span class="info-label">设备型号</span>
@@ -371,6 +389,24 @@ class DeviceOverviewPluginB extends HTMLElement {
         </div>
       </div>
     `;
+    
+    // 绑定 IP 地址点击事件
+    const ipElement = container.querySelector('.ip-clickable');
+    if (ipElement) {
+      ipElement.addEventListener('click', () => {
+        // 触发自定义事件，通知主应用
+        this.dispatchEvent(new CustomEvent('ip-click', {
+          detail: {
+            ip: data.deviceInfo.ip,
+            port: data.deviceInfo.port,
+            serverId: data.deviceInfo.id,
+            serverName: data.deviceInfo.name
+          },
+          bubbles: true, // 允许事件冒泡到主应用
+          composed: true // 允许事件穿透 Shadow DOM
+        }));
+      });
+    }
   }
 }
 

@@ -20,6 +20,7 @@
           v-else-if="server.renderType === 'plugin'"
           :component-name="server.componentName"
           :data="server.data"
+          @plugin-event="handlePluginEvent"
         />
       </div>
     </div>
@@ -116,6 +117,45 @@ export default {
         // 使用 Vue.set 确保响应式更新
         this.$set(this.servers[index], 'data', newData);
       });
+    },
+
+    /**
+     * 处理插件事件
+     * @param {Object} eventData - 事件数据
+     * @param {string} eventData.type - 事件类型
+     * @param {Object} eventData.detail - 事件详情
+     */
+    handlePluginEvent(eventData) {
+      const { type, detail } = eventData;
+      
+      if (type === 'ip-click') {
+        // 处理 IP 地址点击事件
+        this.handleIpClick(detail);
+      }
+    },
+
+    /**
+     * 处理 IP 地址点击
+     * @param {Object} detail - IP 点击事件详情
+     */
+    handleIpClick(detail) {
+      const { ip, port, serverId, serverName } = detail;
+      const address = `${ip}:${port}`;
+      
+      // 这里可以执行各种操作，比如：
+      // 1. 显示提示信息
+      alert(`点击了服务器 "${serverName}" 的 IP 地址：${address}\n服务器ID：${serverId}`);
+      
+      // 2. 或者打开新窗口
+      // window.open(`http://${address}`, '_blank');
+      
+      // 3. 或者复制到剪贴板
+      // navigator.clipboard.writeText(address);
+      
+      // 4. 或者跳转到详情页
+      // this.$router.push(`/server/${serverId}`);
+      
+      console.log('IP 点击事件:', detail);
     }
   }
 };

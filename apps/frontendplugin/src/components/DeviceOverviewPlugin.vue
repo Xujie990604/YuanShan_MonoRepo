@@ -75,6 +75,9 @@ export default {
         // 创建插件实例
         this.pluginElement = this.pluginLoader.createPluginInstance(this.componentName);
 
+        // 监听插件事件（IP 点击等）
+        this.pluginElement.addEventListener('ip-click', this.handlePluginEvent);
+
         // 挂载到容器
         this.$refs.pluginContainer.appendChild(this.pluginElement);
       } catch (error) {
@@ -90,9 +93,26 @@ export default {
         // 更新插件数据
         this.pluginLoader.updatePluginData(this.pluginElement, this.data);
       }
+    },
+
+    /**
+     * 处理插件事件
+     * @param {CustomEvent} event - 插件触发的事件
+     */
+    handlePluginEvent(event) {
+      // 将插件事件传递给父组件
+      this.$emit('plugin-event', {
+        type: event.type,
+        detail: event.detail
+      });
     }
   },
   beforeDestroy() {
+    // 移除事件监听
+    if (this.pluginElement) {
+      this.pluginElement.removeEventListener('ip-click', this.handlePluginEvent);
+    }
+    
     // 清理插件实例
     if (this.$refs.pluginContainer && this.pluginElement) {
       try {
