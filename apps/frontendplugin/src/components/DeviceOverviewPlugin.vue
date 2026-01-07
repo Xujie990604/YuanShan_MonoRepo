@@ -1,7 +1,16 @@
 <template>
   <div class="device-overview-plugin-container">
     <div v-if="loading" class="loading">加载插件中...</div>
-    <div ref="pluginContainer" v-show="!loading"></div>
+    <div v-else-if="error" class="error-placeholder">
+      <div class="error-icon">⚠️</div>
+      <div class="error-title">插件加载失败</div>
+      <div class="error-message">{{ error }}</div>
+      <div class="error-info">
+        <div>组件名称：{{ componentName }}</div>
+        <div>插件路径：{{ pluginUrl }}</div>
+      </div>
+    </div>
+    <div ref="pluginContainer" v-show="!loading && !error"></div>
   </div>
 </template>
 
@@ -30,6 +39,7 @@ export default {
   data() {
     return {
       loading: false,
+      error: null,
       pluginLoader: new PluginLoader(),
       pluginElement: null
     };
@@ -52,6 +62,7 @@ export default {
   methods: {
     async initPlugin() {
       this.loading = true;
+      this.error = null;
 
       try {
         // 加载插件
@@ -68,6 +79,7 @@ export default {
         this.$refs.pluginContainer.appendChild(this.pluginElement);
       } catch (error) {
         console.error('Failed to load plugin:', error);
+        this.error = error.message || '插件加载失败，请检查插件文件是否存在';
       } finally {
         this.loading = false;
       }
@@ -103,5 +115,47 @@ export default {
   padding: 20px;
   text-align: center;
   color: #666;
+}
+
+.error-placeholder {
+  padding: 40px 20px;
+  text-align: center;
+  background: #fff3cd;
+  border: 2px dashed #ffc107;
+  border-radius: 8px;
+  color: #856404;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.error-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #856404;
+}
+
+.error-message {
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: #856404;
+  word-break: break-word;
+}
+
+.error-info {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ffc107;
+  font-size: 12px;
+  color: #856404;
+  text-align: left;
+  display: inline-block;
+}
+
+.error-info div {
+  margin: 4px 0;
 }
 </style>

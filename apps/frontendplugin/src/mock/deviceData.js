@@ -97,5 +97,36 @@ export const mockDeviceData = [
         ]
       }
     }
+  },
+  {
+    serverId: 'server-004',
+    serverName: '第三方服务器C（插件缺失）',
+    renderType: 'plugin', // 使用插件渲染
+    componentName: 'device-overview-plugin-c', // 这个插件文件不存在，用于测试错误处理
+    data: {
+      deviceInfo: {
+        id: 'server-004',
+        name: '第三方服务器C',
+        ip: '192.168.1.103',
+        port: 7000,
+        model: 'NVR-1000',
+        manufacturer: 'Partner-C',
+        firmwareVersion: 'v1.0.0'
+      },
+      timeInfo: {
+        serverTime: '2024-01-15T10:30:45+08:00',
+        timezone: 'Asia/Shanghai',
+        uptime: 345600
+      },
+      cameras: {
+        total: 4,
+        online: 3,
+        offline: 1,
+        list: [
+          { id: 'cam-c-001', name: 'C摄像头-01', status: 'online', channel: 1, resolution: '1920x1080' },
+          { id: 'cam-c-002', name: 'C摄像头-02', status: 'offline', channel: 2, resolution: '1280x720' }
+        ]
+      }
+    }
   }
 ];
