@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskInput, UpdateTaskInput, Task } from '@yuan-shan/keydo-contract';
-import { getRankBetween, getInitialRank } from '@yuan-shan/tools';
+// 注意：getRankBetween 和 getInitialRank 不再使用，但保留导入以备后续需要
+// import { getRankBetween, getInitialRank } from '@yuan-shan/tools';
 
 @Injectable()
 export class TaskService {
@@ -15,7 +16,7 @@ export class TaskService {
       where: { userId },
       orderBy: [
         { quadrant: 'asc' },
-        { order: 'asc' },
+        { createdAt: 'asc' }, // 按创建时间排序
       ],
     });
 
@@ -41,32 +42,16 @@ export class TaskService {
    * 创建任务
    */
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
-    const { title, quadrant, order } = createTaskInput;
+    const { title, quadrant } = createTaskInput;
 
-    // 如果没有提供 order，计算初始排序值
-    let taskOrder = order;
-    if (!taskOrder) {
-      // 查找同一象限中最后一个任务的 order
-      const lastTask = await this.prisma.task.findFirst({
-        where: { userId, quadrant },
-        orderBy: { order: 'desc' },
-      });
-
-      if (lastTask) {
-        // 插入到最后
-        taskOrder = getRankBetween(lastTask.order, null);
-      } else {
-        // 第一个任务
-        taskOrder = getInitialRank();
-      }
-    }
-
+    // order 字段保留但不更新，创建时默认值为 'a'
+    // 排序策略改为按创建时间排序
     const task = await this.prisma.task.create({
       data: {
         userId,
         title,
         quadrant,
-        order: taskOrder,
+        order: 'a', // 固定默认值，不用于排序
         completed: false,
       },
     });
@@ -87,40 +72,17 @@ export class TaskService {
       throw new NotFoundException('任务不存在');
     }
 
-    const { title, quadrant, completed, order } = updateTaskInput;
+    const { title, quadrant, completed } = updateTaskInput;
 
-    // 如果更新了象限，需要重新计算排序
-    let taskOrder = order;
-    if (quadrant && quadrant !== existingTask.quadrant) {
-      // 象限改变，需要在新象限中计算排序
-      if (!order) {
-        // 如果没有提供 order，插入到新象限的最后
-        const lastTask = await this.prisma.task.findFirst({
-          where: { userId, quadrant },
-          orderBy: { order: 'desc' },
-        });
-
-        if (lastTask) {
-          taskOrder = getRankBetween(lastTask.order, null);
-        } else {
-          taskOrder = getInitialRank();
-        }
-      }
-    } else if (order && order !== existingTask.order) {
-      // 在同一象限内移动，验证 order 是否有效
-      taskOrder = order;
-    } else {
-      // 保持原有 order
-      taskOrder = existingTask.order;
-    }
-
+    // order 字段不再更新，保持原有值
+    // 排序策略改为按创建时间排序，不再使用 order 字段
     const task = await this.prisma.task.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
         ...(quadrant !== undefined && { quadrant }),
         ...(completed !== undefined && { completed }),
-        order: taskOrder,
+        // order 字段不更新，保持原有值
       },
     });
 

@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react'
 import { useDroppable } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import TaskCard from './TaskCard'
@@ -12,6 +11,14 @@ import { cn } from '@/lib/utils'
 interface QuadrantProps {
   quadrantId: QuadrantType
   tasks: Task[]
+  /**
+   * isHighlighted: 是否高亮显示此象限
+   * 
+   * 用途：
+   * - 在跨象限拖拽时，高亮显示目标象限
+   * - 提供视觉反馈，让用户清楚知道任务将被放置到哪个象限
+   */
+  isHighlighted?: boolean
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
   onAddTask: (quadrant: QuadrantType, title: string) => void
@@ -23,13 +30,14 @@ interface QuadrantProps {
  * 功能：
  * 1. 显示象限内的任务列表
  * 2. 支持添加任务（带表单验证）
- * 3. 支持作为拖拽目标（使用 @dnd-kit 的 useDroppable）
- * 4. 支持象限内任务排序（使用 SortableContext）
+ * 3. 支持作为拖拽目标（使用 @dnd-kit 的 useDroppable）- 仅支持跨象限拖拽
+ * 4. 任务排序：按创建时间排序（createdAt）
  * 5. 任务分组显示（未完成/已完成）
  */
 export default function Quadrant({
   quadrantId,
   tasks,
+  isHighlighted = false,
   onToggleComplete,
   onDelete,
   onAddTask,
@@ -51,29 +59,22 @@ export default function Quadrant({
   const config = QUADRANT_CONFIGS.find((c) => c.id === quadrantId)!
   
   /**
-   * 筛选未完成任务并按 order 排序
+   * 筛选未完成任务并按创建时间排序
    */
   const incompleteTasks = useMemo(() => {
     return tasks
       .filter((t) => !t.completed)
-      .sort((a, b) => a.order.localeCompare(b.order))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   }, [tasks])
 
   /**
-   * 筛选已完成任务并按 order 排序
+   * 筛选已完成任务并按创建时间排序
    */
   const completedTasks = useMemo(() => {
     return tasks
       .filter((t) => t.completed)
-      .sort((a, b) => a.order.localeCompare(b.order))
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
   }, [tasks])
-
-  /**
-   * 获取未完成任务 ID 数组（用于 SortableContext）
-   */
-  const incompleteTaskIds = useMemo(() => {
-    return incompleteTasks.map((t) => t.id)
-  }, [incompleteTasks])
 
   /**
    * 处理添加任务确认
@@ -88,7 +89,11 @@ export default function Quadrant({
       className={cn(
         'flex flex-col h-full rounded-lg border border-border',
         config.bgColor,
-        isOver && 'ring-2 ring-primary ring-inset'
+        // 高亮状态：跨象限拖拽时的目标象限高亮
+        // 使用更强的视觉效果，区别于普通的 isOver 状态
+        isHighlighted && 'ring-4 ring-primary ring-inset shadow-lg',
+        // 普通悬停状态：只在非高亮时显示
+        !isHighlighted && isOver && 'ring-2 ring-primary ring-inset'
       )}
     >
       {/* 象限头部 */}
@@ -110,24 +115,18 @@ export default function Quadrant({
 
       {/* 象限内容 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {/* 未完成任务列表（支持排序） */}
+        {/* 未完成任务列表（按创建时间排序） */}
         {incompleteTasks.length > 0 && (
-          <SortableContext
-            items={incompleteTaskIds}
-            strategy={verticalListSortingStrategy}
-            id={`${quadrantId}-incomplete`}
-          >
-            <div className="space-y-2">
-              {incompleteTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onToggleComplete={onToggleComplete}
-                  onDelete={onDelete}
-                />
-              ))}
-            </div>
-          </SortableContext>
+          <div className="space-y-2">
+            {incompleteTasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onToggleComplete={onToggleComplete}
+                onDelete={onDelete}
+              />
+            ))}
+          </div>
         )}
 
         {/* 已完成任务列表（不支持排序，只显示） */}

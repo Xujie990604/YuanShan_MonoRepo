@@ -4,7 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import * as taskApi from '@/api/task'
 import { queryKeys } from './query-keys'
-import type { Task, UpdateTaskInput } from '@yuan-shan/keydo-contract'
+import type { UpdateTaskInput } from '@yuan-shan/keydo-contract'
 import { showToast } from '@/lib/simple-toast'
 
 // 便捷方法
@@ -57,40 +57,21 @@ export function useUpdateTask() {
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskInput }) =>
       taskApi.updateTask(id, data),
 
-    // 执行之前先触发乐观更新
-    onMutate: async ({ id, data }) => {
-      // 1. 取消正在进行的查询，避免覆盖我们的乐观更新
+    // 执行之前取消查询
+    // 注意：乐观更新已经在调用方（如 handleDragEnd）中完成
+    // 这里只负责取消查询，不再进行乐观更新和保存快照
+    onMutate: async () => {
+      // 取消正在进行的查询，避免覆盖调用方的乐观更新
       await queryClient.cancelQueries({ queryKey: queryKeys.tasks.list() })
-
-      // 2. 保存旧数据的快照，用于出错时回滚
-      const previousTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list())
-
-      // 3. 乐观更新：直接修改内存里的数据
-      if (previousTasks) {
-        queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (old = []) => {
-          return old.map((task) => {
-            if (task.id === id) {
-              // 将新数据合并到旧任务中
-              return { ...task, ...data }
-            }
-            return task
-          })
-        })
-      }
-
-      // 返回快照，供 onError 使用
-      return { previousTasks }
     },
 
-    // 如果失败了，使用快照恢复数据
-    onError: (error: any, _variables, context) => {
-      if (context?.previousTasks) {
-        queryClient.setQueryData(queryKeys.tasks.list(), context.previousTasks)
-      }
+    // 如果失败了，只显示错误提示
+    // 注意：回滚逻辑由调用方处理（调用方知道更新前的状态）
+    // 因为乐观更新可能在调用方完成，这里的快照可能是更新后的数据
+    onError: (error: any) => {
       toast.error(error.message || '更新任务失败')
     },
 
-    // 不管成功还是失败，都重新拉取一下服务器真实数据，确保同步
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() })
     },

@@ -19,15 +19,15 @@ interface TaskCardProps {
  * 
  * 功能：
  * 1. 显示任务信息（标题、完成状态）
- * 2. 支持拖拽和排序（使用 @dnd-kit 的 useSortable）
+ * 2. 支持拖拽（使用 @dnd-kit 的 useSortable）- 仅用于跨象限拖拽
  * 3. 支持右键菜单删除
  * 4. 支持点击切换完成状态
  */
 export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardProps) {
-  // ========== @dnd-kit 排序功能 ==========
+  // ========== @dnd-kit 拖拽功能 ==========
   
   /**
-   * useSortable Hook：使元素可拖拽和排序
+   * useSortable Hook：使元素可拖拽（用于跨象限拖拽）
    * 
    * 返回值说明：
    * - attributes: 需要添加到拖拽元素的 HTML 属性（如 aria-*）
@@ -53,15 +53,16 @@ export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardP
 
   /**
    * 动态样式计算
-   * - 拖拽时：设置透明度为 0.3（半透明效果）
-   * - 非拖拽时：应用 transform（位置变换，用于排序动画）
    * 
-   * CSS.Translate.toString(transform):
-   * - 将 @dnd-kit 的 transform 对象转换为 CSS transform 字符串
+   * 样式说明：
+   * - transform: 拖拽时的位置变换（由 dnd-kit 计算）
+   * - transition: 过渡动画（用于排序时的平滑移动）
+   * - opacity: 拖拽时设置为半透明，让用户知道正在拖拽
    */
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    // 拖拽时禁用 transition，避免动画冲突
+    transition: isDragging ? 'none' : transition,
     ...(isDragging && {
       opacity: 0.3,
     }),
@@ -81,7 +82,7 @@ export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardP
         style={style}
         {...attributes}
         className={cn(
-          'flex items-center gap-2 p-3 rounded-md bg-card border border-border',
+          'flex items-center gap-2 px-3 rounded-md bg-card border border-border',
           'hover:shadow-md transition-shadow',
           task.completed && 'opacity-60'
         )}
@@ -94,23 +95,27 @@ export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardP
         />
 
         {/* 
-          任务标题（可拖拽区域）
-          {...listeners}: 将拖拽监听器绑定在标题上，只有这个区域可以拖拽
+          可拖拽区域（右侧剩余空间）
+          {...listeners}: 将拖拽监听器绑定到这个 div 上
         */}
-        <span
+        <div
           {...listeners}
-          className={cn(
-            'flex-1 text-sm cursor-grab active:cursor-grabbing',
-            task.completed && 'line-through text-muted-foreground'
-          )}
+          className="flex-1 flex items-center h-full py-3 cursor-grab active:cursor-grabbing"
           onClick={() => {
             if (!isDragging) {
               onToggleComplete(task.id)
             }
           }}
         >
-          {task.title}
-        </span>
+          <span
+            className={cn(
+              'text-sm',
+              task.completed && 'line-through text-muted-foreground'
+            )}
+          >
+            {task.title}
+          </span>
+        </div>
       </div>
     </TaskContextMenu>
   )
