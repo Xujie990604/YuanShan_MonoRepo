@@ -54,7 +54,7 @@ export default function Quadrant({
 
   // ========== @dnd-kit 拖拽目标功能 ==========
   
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef } = useDroppable({
     id: quadrantId,
   })
 
@@ -186,7 +186,7 @@ export default function Quadrant({
         </div>
         {/* 右侧：任务数量 + 添加按钮 */}
         <div className="flex items-center gap-2 shrink-0">
-          <Badge variant="secondary" className="font-mono text-xs">
+          <Badge variant="secondary" className="font-mono text-sm px-2 py-0.5 hover:bg-secondary">
             {incompleteTasks.length}
           </Badge>
           <Button

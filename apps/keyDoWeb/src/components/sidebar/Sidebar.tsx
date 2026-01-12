@@ -1,6 +1,7 @@
-import { Settings, LogOut, CheckSquare } from 'lucide-react'
+import { Settings, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import ColorfulLogo from '@/components/ColorfulLogo'
 
 /**
  * 侧边栏组件
@@ -27,10 +28,8 @@ export default function Sidebar() {
       {/* Logo 区域 */}
       <div className="p-6">
         <div className="flex items-center gap-3">
-          {/* Logo 图标 */}
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <CheckSquare className="w-6 h-6 text-primary-foreground" />
-          </div>
+          {/* 彩色四象限 Logo */}
+          <ColorfulLogo size="md" />
           {/* 应用名称和标语 */}
           <div className="min-w-0">
             <h1 className="text-lg font-semibold text-sidebar-foreground leading-tight">
