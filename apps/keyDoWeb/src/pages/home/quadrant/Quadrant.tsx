@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import TaskCard from './TaskCard'
 import AddTaskDialog from './AddTaskDialog'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
@@ -128,6 +129,7 @@ export default function Quadrant({
       <TaskCard
         key={task.id}
         task={task}
+        hoverColor={config.hoverColor}
         onToggleComplete={onToggleComplete}
         onDelete={onDelete}
       />
@@ -159,33 +161,47 @@ export default function Quadrant({
     <div
       ref={setNodeRef}
       className={cn(
-        'flex flex-col h-full rounded-lg border border-border',
+        'flex flex-col h-full rounded-xl border-2 transition-colors overflow-hidden',
         config.bgColor,
-        // 跨象限拖拽目标：强高亮
-        isTargetQuadrant && 'ring-4 ring-primary ring-inset shadow-lg',
-        // 普通悬停状态
-        !isTargetQuadrant && isOver && 'ring-2 ring-primary ring-inset'
+        // 跨象限拖拽目标：高亮（使用象限主题色边框）
+        // 只有从其他象限拖拽过来时才显示高亮，象限内排序不高亮
+        isTargetQuadrant ? [config.borderColor, 'shadow-lg'] : 'border-border'
       )}
     >
       {/* 象限头部 */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">{quadrantId}</span>
-          <span className="text-sm text-muted-foreground">{config.label}</span>
-          <span className="text-xs text-muted-foreground">({incompleteTasks.length})</span>
+      <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between gap-4">
+        {/* 左侧：Badge + 标题 + 描述 */}
+        <div className="flex items-center gap-3 min-w-0">
+          <Badge className={cn('font-semibold shrink-0', config.badgeColor)}>
+            {quadrantId}
+          </Badge>
+          <div className="min-w-0">
+            <h2 className="font-semibold text-base text-foreground leading-tight">
+              {config.label}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {config.subtitle} · {config.description}
+            </p>
+          </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={() => setIsDialogOpen(true)}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        {/* 右侧：任务数量 + 添加按钮 */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="secondary" className="font-mono text-xs">
+            {incompleteTasks.length}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => setIsDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* 象限内容 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* 象限内容 - 自定义滚动条 */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {/* 未完成任务列表 */}
         {incompleteTasks.length > 0 && renderTaskList()}
 
@@ -199,6 +215,7 @@ export default function Quadrant({
               <TaskCard
                 key={task.id}
                 task={task}
+                hoverColor={config.hoverColor}
                 onToggleComplete={onToggleComplete}
                 onDelete={onDelete}
               />

@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 
 interface TaskCardProps {
   task: Task
+  hoverColor?: string  // 象限对应的 hover 背景色
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
 }
@@ -22,7 +23,7 @@ interface TaskCardProps {
  * 3. 支持右键菜单删除
  * 4. 点击复选框切换完成状态（只有复选框可切换，其他区域不可）
  */
-export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardProps) {
+export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete }: TaskCardProps) {
   /**
    * useSortable Hook：使元素可拖拽
    * 
@@ -58,8 +59,9 @@ export default function TaskCard({ task, onToggleComplete, onDelete }: TaskCardP
         style={style}
         {...attributes}
         className={cn(
-          'flex items-center gap-2 px-3 rounded-md bg-card border border-border',
-          'hover:shadow-md transition-shadow',
+          'flex items-center gap-2 px-3 rounded-lg bg-card/80 backdrop-blur-sm border border-border/50',
+          'transition-all',
+          hoverColor,  // 应用象限对应的 hover 背景色
           task.completed && 'opacity-60'
         )}
       >
