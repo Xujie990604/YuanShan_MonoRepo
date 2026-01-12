@@ -1,7 +1,9 @@
 import { Settings, LogOut } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import ColorfulLogo from '@/components/ColorfulLogo'
+import { useAuthStore } from '@/store/auth'
 
 /**
  * 侧边栏组件
@@ -12,10 +14,24 @@ import ColorfulLogo from '@/components/ColorfulLogo'
  * - 底部：设置 + 退出登录按钮
  */
 export default function Sidebar() {
+  const queryClient = useQueryClient()
+  const clearAuth = useAuthStore((state) => state.clearAuth)
+
+  /**
+   * 退出登录
+   * 
+   * 步骤：
+   * 1. 清除 Zustand 认证状态（token、user）
+   * 2. 清除 TanStack Query 缓存（避免下次登录看到旧数据）
+   * 3. 跳转到登录页（使用 window.location 确保完全刷新）
+   */
   const handleLogout = () => {
-    // TODO: 实现退出登录逻辑
-    localStorage.removeItem('token')
-    window.location.href = '/signin'
+    // 清除认证状态
+    clearAuth()
+    // 清除所有缓存的查询数据
+    queryClient.clear()
+    // 跳转到登录页
+    window.location.href = '/auth/login'
   }
 
   const handleSettings = () => {
