@@ -1,8 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskInput, UpdateTaskInput, Task } from '@yuan-shan/keydo-contract';
-// 注意：getRankBetween 和 getInitialRank 不再使用，但保留导入以备后续需要
-// import { getRankBetween, getInitialRank } from '@yuan-shan/tools';
+import { getRankBetween, getInitialRank } from '@yuan-shan/tools';
 
 @Injectable()
 export class TaskService {
@@ -10,13 +9,17 @@ export class TaskService {
 
   /**
    * 获取用户的所有任务
+   * 
+   * 排序规则：
+   * 1. 按象限排序（Q1 → Q2 → Q3 → Q4）
+   * 2. 同一象限内按 order 排序（LexoRank 字符串比较）
    */
   async findAll(userId: number): Promise<Task[]> {
     const tasks = await this.prisma.task.findMany({
       where: { userId },
       orderBy: [
         { quadrant: 'asc' },
-        { createdAt: 'asc' }, // 按创建时间排序
+        { order: 'asc' },  // 按 LexoRank order 排序
       ],
     });
 
@@ -40,18 +43,33 @@ export class TaskService {
 
   /**
    * 创建任务
+   * 
+   * 新任务放在目标象限的底部（未完成任务列表末尾）
+   * 使用 LexoRank 计算 order 值
    */
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
     const { title, quadrant } = createTaskInput;
 
-    // order 字段保留但不更新，创建时默认值为 'a'
-    // 排序策略改为按创建时间排序
+    // 获取目标象限最后一个未完成任务的 order
+    // 按 order 降序排列，取第一个即为最后一个任务
+    const lastTask = await this.prisma.task.findFirst({
+      where: { userId, quadrant, completed: false },
+      orderBy: { order: 'desc' },
+    });
+
+    // 计算新任务的 order（追加到末尾）
+    // 如果象限内没有未完成任务，使用初始值
+    // 如果有任务，在最后一个任务之后生成新值
+    const newOrder = lastTask 
+      ? getRankBetween(lastTask.order, null)  // 比最后一个大
+      : getInitialRank();                      // 第一个任务
+
     const task = await this.prisma.task.create({
       data: {
         userId,
         title,
         quadrant,
-        order: 'a', // 固定默认值，不用于排序
+        order: newOrder,
         completed: false,
       },
     });
@@ -61,6 +79,12 @@ export class TaskService {
 
   /**
    * 更新任务
+   * 
+   * 支持更新的字段：
+   * - title: 任务标题
+   * - quadrant: 所属象限（跨象限拖拽）
+   * - completed: 完成状态
+   * - order: 排序值（象限内排序或跨象限后的位置）
    */
   async update(id: string, userId: number, updateTaskInput: UpdateTaskInput): Promise<Task> {
     // 检查任务是否存在且属于当前用户
@@ -72,17 +96,16 @@ export class TaskService {
       throw new NotFoundException('任务不存在');
     }
 
-    const { title, quadrant, completed } = updateTaskInput;
+    const { title, quadrant, completed, order } = updateTaskInput;
 
-    // order 字段不再更新，保持原有值
-    // 排序策略改为按创建时间排序，不再使用 order 字段
+    // 构建更新数据，只包含传入的字段
     const task = await this.prisma.task.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
         ...(quadrant !== undefined && { quadrant }),
         ...(completed !== undefined && { completed }),
-        // order 字段不更新，保持原有值
+        ...(order !== undefined && { order }),  // 支持 order 更新
       },
     });
 

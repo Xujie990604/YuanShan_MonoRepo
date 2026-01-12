@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
+import { getRankBetween } from '@yuan-shan/tools'
 import Quadrant from './Quadrant'
 import DraggedTaskPreview from './DraggedTaskPreview'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
@@ -15,28 +16,18 @@ import { queryKeys } from '@/hooks/query-keys'
  * 功能：
  * 1. 使用 TanStack Query 管理任务数据
  * 2. 处理任务的增删改查（通过 API）
- * 3. 实现拖拽功能（使用 @dnd-kit）- 仅支持跨象限拖拽
- * 4. 任务排序：按创建时间排序（createdAt）
+ * 3. 实现拖拽功能（使用 @dnd-kit）
+ *    - 象限内拖拽：支持排序（有让位动画）
+ *    - 跨象限拖拽：任务移动到目标象限底部（无让位动画）
+ * 4. 任务排序：使用 LexoRank order 字段
  */
 export default function QuadrantContainer() {
   // ========== TanStack Query：数据获取 ==========
   
-  /**
-   * 获取任务列表
-   */
   const { data: tasks = [], isLoading, error } = useTasks()
-  
-  /**
-   * Mutations：任务操作
-   */
   const createTaskMutation = useCreateTask()
   const updateTaskMutation = useUpdateTask()
   const deleteTaskMutation = useDeleteTask()
-
-  /**
-   * QueryClient：用于乐观更新任务数据
-   * 在拖拽过程中实时更新本地缓存，避免视觉回弹
-   */
   const queryClient = useQueryClient()
 
   // ========== 拖拽状态 ==========
@@ -46,41 +37,39 @@ export default function QuadrantContainer() {
    */
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
+  /**
+   * originQuadrant: 拖拽开始时的原始象限
+   * 用于判断是「象限内排序」还是「跨象限拖拽」
+   */
+  const [originQuadrant, setOriginQuadrant] = useState<QuadrantType | null>(null)
+
+  /**
+   * currentOverQuadrant: 当前悬停的象限
+   * 用于动态控制 SortableContext 的启用/禁用
+   */
+  const [currentOverQuadrant, setCurrentOverQuadrant] = useState<QuadrantType | null>(null)
+
   // ========== 任务操作方法（带乐观更新） ==========
   
   /**
    * 切换任务完成状态（带乐观更新）
-   * 
-   * 乐观更新流程：
-   * 1. 保存当前任务的原始状态（只保存这一个任务，不是整个列表）
-   * 2. 立即更新本地缓存（UI 瞬间响应）
-   * 3. 发送 API 请求
-   * 4. 如果失败，只回滚这一个任务的状态（不影响其他并发操作）
    */
   const handleToggleComplete = (id: string) => {
-    // 获取当前缓存数据
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
     const task = currentTasks.find((t) => t.id === id)
     if (!task) return
 
-    // 1. 保存当前任务的原始完成状态（只保存需要回滚的字段）
     const originalCompleted = task.completed
     
-    // 2. 立即乐观更新
     queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
       return oldTasks.map((t) =>
         t.id === id ? { ...t, completed: !t.completed } : t
       )
     })
 
-    // 3. 发送 API 请求
     updateTaskMutation.mutate(
+      { id, data: { completed: !task.completed } },
       {
-        id,
-        data: { completed: !task.completed },
-      },
-      {
-        // 4. 失败时只回滚这一个任务的状态
         onError: () => {
           queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
             return oldTasks.map((t) =>
@@ -94,32 +83,19 @@ export default function QuadrantContainer() {
 
   /**
    * 删除任务（带乐观更新）
-   * 
-   * 乐观更新流程：
-   * 1. 保存被删除任务的完整数据（用于失败时恢复）
-   * 2. 立即从本地缓存中移除任务（UI 瞬间响应）
-   * 3. 发送 API 请求
-   * 4. 如果失败，只把这一个任务加回去（不影响其他并发操作）
    */
   const handleDelete = (id: string) => {
-    // 获取当前缓存数据
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
-    
-    // 1. 保存被删除任务的完整数据
     const deletedTask = currentTasks.find((t) => t.id === id)
     if (!deletedTask) return
     
-    // 2. 立即乐观更新（从列表中移除）
     queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
       return oldTasks.filter((t) => t.id !== id)
     })
 
-    // 3. 发送 API 请求
     deleteTaskMutation.mutate(id, {
-      // 4. 失败时只把这一个任务加回去
       onError: () => {
         queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
-          // 检查任务是否已经被加回（避免重复）
           if (oldTasks.some((t) => t.id === id)) return oldTasks
           return [...oldTasks, deletedTask]
         })
@@ -128,60 +104,76 @@ export default function QuadrantContainer() {
   }
 
   /**
-   * 添加新任务
+   * 添加新任务（order 由服务端计算）
    */
   const handleAddTask = (quadrant: QuadrantType, title: string) => {
-    createTaskMutation.mutate({
-      title,
-      quadrant,
-      // order 字段不再使用，服务端会设置默认值 'a'
-    })
+    createTaskMutation.mutate({ title, quadrant })
   }
 
   // ========== 拖拽功能处理 ==========
   
   /**
-   * 拖拽开始事件处理
-   * 
-   * 功能：
-   * 记录当前正在拖拽的任务，用于 DragOverlay 显示
+   * 拖拽开始事件
    */
   const handleDragStart = (event: DragStartEvent) => {
-    const task = tasks.find((t) => t.id === event.active.id)
+    const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
+    const task = currentTasks.find((t) => t.id === event.active.id)
     if (task) {
       setActiveTask(task)
+      setOriginQuadrant(task.quadrant)
+      setCurrentOverQuadrant(task.quadrant)
     }
   }
 
   /**
-   * 拖拽结束事件处理
+   * 拖拽过程中事件
+   * 用于追踪当前悬停的象限，控制 SortableContext 的启用/禁用
+   */
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event
+    if (!over) {
+      setCurrentOverQuadrant(null)
+      return
+    }
+
+    const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
+    
+    // 判断悬停目标是象限容器还是任务
+    const isContainer = QUADRANT_CONFIGS.some((c) => c.id === over.id)
+    const overQuadrant = isContainer 
+      ? (over.id as QuadrantType) 
+      : currentTasks.find((t) => t.id === over.id)?.quadrant
+
+    if (overQuadrant) {
+      setCurrentOverQuadrant(overQuadrant)
+    }
+  }
+
+  /**
+   * 拖拽结束事件
    * 
    * 核心逻辑：
-   * 1. 使用最新的缓存数据
-   * 2. 通过 over.id 判定最终落点象限
-   * 3. 只处理跨象限拖拽，不再支持同象限内排序
-   * 4. 立即乐观更新数据，然后发送持久化请求
+   * 1. 判断是「象限内排序」还是「跨象限拖拽」
+   * 2. 计算新的 order 值
+   * 3. 乐观更新 + API 请求
    */
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     
     // 清除拖拽状态
     setActiveTask(null)
+    setOriginQuadrant(null)
+    setCurrentOverQuadrant(null)
 
-    // 如果拖拽取消（没有 over），直接返回
     if (!over) return
 
     const taskId = active.id as string
-    
-    // 使用最新的缓存数据（可能已被 onDragOver 乐观更新）
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
     const draggedTask = currentTasks.find((t) => t.id === taskId)
     
     if (!draggedTask) return
 
-    // 确定最终落点象限
-    // 如果 over.id 是象限容器 ID，直接使用
-    // 如果是任务 ID，则查找该任务所属的象限
+    // 判断目标位置
     const isContainer = QUADRANT_CONFIGS.some((c) => c.id === over.id)
     const finalQuadrant = isContainer 
       ? (over.id as QuadrantType) 
@@ -189,73 +181,149 @@ export default function QuadrantContainer() {
 
     if (!finalQuadrant) return
 
-    // 只处理跨象限拖拽
-    if (draggedTask.quadrant !== finalQuadrant) {
-      /**
-       * 跨象限拖拽处理（并发安全的乐观更新）
-       * 
-       * 关键：在调用 mutate 之前，先立即乐观更新数据
-       * 因为 onMutate 是异步的，在它执行之前数据还是旧的
-       * 这会导致 dnd-kit 基于旧数据计算位置，产生回弹
-       * 
-       * 并发安全：
-       * - 只保存和回滚单个任务的象限
-       * - 不会覆盖其他并发操作的结果
-       */
-      // 保存当前任务的原始象限（只保存需要回滚的字段）
-      const originalQuadrant = draggedTask.quadrant
-      
-      // 立即乐观更新，避免回弹
-      queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
-        return oldTasks.map((task) =>
-          task.id === taskId
-            ? { ...task, quadrant: finalQuadrant }
-            : task
-        )
-      })
+    // 获取目标象限的未完成任务列表（按 order 排序）
+    const targetQuadrantTasks = currentTasks
+      .filter((t) => t.quadrant === finalQuadrant && !t.completed && t.id !== taskId)
+      .sort((a, b) => a.order.localeCompare(b.order))
 
-      // 然后发送持久化请求
-      updateTaskMutation.mutate(
-        {
-          id: taskId,
-          data: { quadrant: finalQuadrant },
-        },
-        {
-          // 失败时只回滚这一个任务的象限
-          onError: () => {
-            queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
-              return oldTasks.map((task) =>
-                task.id === taskId
-                  ? { ...task, quadrant: originalQuadrant }
-                  : task
-              )
-            })
-          },
-        }
-      )
+    if (draggedTask.quadrant === finalQuadrant) {
+      // ========== 象限内排序 ==========
+      handleIntraQuadrantSort(taskId, draggedTask, over.id as string, targetQuadrantTasks, currentTasks)
+    } else {
+      // ========== 跨象限拖拽 ==========
+      handleCrossQuadrantMove(taskId, draggedTask, finalQuadrant, targetQuadrantTasks)
     }
   }
 
   /**
-   * 按象限分组任务（使用 useMemo 缓存）
-   * 
-   * 优化说明：
-   * - 使用 useMemo 缓存分组结果，避免每次渲染都执行过滤
-   * - 只有当 tasks 变化时才重新计算
-   * - 乐观更新会触发 tasks 变化，从而触发重新计算
-   * 
-   * 返回值：Record<QuadrantType, Task[]>
-   * - Q1: 重要且紧急的任务数组
-   * - Q2: 重要不紧急的任务数组
-   * - Q3: 不重要但紧急的任务数组
-   * - Q4: 不重要不紧急的任务数组
+   * 处理象限内排序
    */
+  const handleIntraQuadrantSort = (
+    taskId: string,
+    draggedTask: Task,
+    overId: string,
+    targetQuadrantTasks: Task[],
+    currentTasks: Task[]
+  ) => {
+    // 如果拖到自己身上，不处理
+    if (taskId === overId) return
+
+    // 如果拖到象限容器上（而不是具体任务），放到末尾
+    const isContainer = QUADRANT_CONFIGS.some((c) => c.id === overId)
+    
+    let newOrder: string
+    let newTaskList: Task[]
+
+    if (isContainer) {
+      // 放到末尾
+      const lastTask = targetQuadrantTasks[targetQuadrantTasks.length - 1]
+      newOrder = lastTask ? getRankBetween(lastTask.order, null) : draggedTask.order
+      
+      newTaskList = currentTasks.map((t) =>
+        t.id === taskId ? { ...t, order: newOrder } : t
+      )
+    } else {
+      // 放到具体任务的位置
+      const overTask = currentTasks.find((t) => t.id === overId)
+      if (!overTask) return
+
+      // 获取本象限所有未完成任务（包含被拖拽的任务）
+      const allQuadrantTasks = currentTasks
+        .filter((t) => t.quadrant === draggedTask.quadrant && !t.completed)
+        .sort((a, b) => a.order.localeCompare(b.order))
+      
+      const actualOverIndex = allQuadrantTasks.findIndex((t) => t.id === overId)
+      const actualDraggedIndex = allQuadrantTasks.findIndex((t) => t.id === taskId)
+
+      if (actualOverIndex === -1 || actualDraggedIndex === -1) return
+      if (actualOverIndex === actualDraggedIndex) return
+
+      // 计算新的 order
+      // 如果向下移动（draggedIndex < overIndex），插入到 over 之后
+      // 如果向上移动（draggedIndex > overIndex），插入到 over 之前
+      if (actualDraggedIndex < actualOverIndex) {
+        // 向下移动：插入到 over 之后
+        const nextTask = allQuadrantTasks[actualOverIndex + 1]
+        newOrder = getRankBetween(overTask.order, nextTask?.order || null)
+      } else {
+        // 向上移动：插入到 over 之前
+        const prevTask = allQuadrantTasks[actualOverIndex - 1]
+        newOrder = getRankBetween(prevTask?.order || null, overTask.order)
+      }
+
+      newTaskList = currentTasks.map((t) =>
+        t.id === taskId ? { ...t, order: newOrder } : t
+      )
+    }
+
+    // 保存原始值用于回滚
+    const originalOrder = draggedTask.order
+
+    // 乐观更新
+    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), newTaskList!)
+
+    // API 请求
+    updateTaskMutation.mutate(
+      { id: taskId, data: { order: newOrder! } },
+      {
+        onError: () => {
+          queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+            return oldTasks.map((t) =>
+              t.id === taskId ? { ...t, order: originalOrder } : t
+            )
+          })
+        },
+      }
+    )
+  }
+
+  /**
+   * 处理跨象限拖拽
+   * 任务移动到目标象限的底部
+   */
+  const handleCrossQuadrantMove = (
+    taskId: string,
+    draggedTask: Task,
+    finalQuadrant: QuadrantType,
+    targetQuadrantTasks: Task[]
+  ) => {
+    // 计算新的 order（放到目标象限末尾）
+    const lastTask = targetQuadrantTasks[targetQuadrantTasks.length - 1]
+    const newOrder = lastTask 
+      ? getRankBetween(lastTask.order, null) 
+      : draggedTask.order  // 如果目标象限为空，保持原 order
+
+    // 保存原始值用于回滚
+    const originalQuadrant = draggedTask.quadrant
+    const originalOrder = draggedTask.order
+
+    // 乐观更新
+    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+      return oldTasks.map((t) =>
+        t.id === taskId ? { ...t, quadrant: finalQuadrant, order: newOrder } : t
+      )
+    })
+
+    // API 请求
+    updateTaskMutation.mutate(
+      { id: taskId, data: { quadrant: finalQuadrant, order: newOrder } },
+      {
+        onError: () => {
+          queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+            return oldTasks.map((t) =>
+              t.id === taskId ? { ...t, quadrant: originalQuadrant, order: originalOrder } : t
+            )
+          })
+        },
+      }
+    )
+  }
+
+  // ========== 按象限分组任务 ==========
+  
   const tasksByQuadrant = useMemo(() => {
-    // 优先使用 queryClient 中的最新数据（包括乐观更新）
-    // 这确保拖拽时的即时响应
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
     
-    // 初始化分组结果
     const result: Record<QuadrantType, Task[]> = {
       Q1: [],
       Q2: [],
@@ -263,7 +331,6 @@ export default function QuadrantContainer() {
       Q4: [],
     }
     
-    // 一次遍历完成分组（O(n) 复杂度）
     for (const task of currentTasks) {
       result[task.quadrant].push(task)
     }
@@ -297,6 +364,7 @@ export default function QuadrantContainer() {
     <DndContext
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="flex-1 h-full grid grid-cols-2 grid-rows-2 gap-4 p-4">
@@ -305,7 +373,8 @@ export default function QuadrantContainer() {
             key={config.id}
             quadrantId={config.id}
             tasks={tasksByQuadrant[config.id]}
-            isHighlighted={false}
+            originQuadrant={originQuadrant}
+            currentOverQuadrant={currentOverQuadrant}
             onToggleComplete={handleToggleComplete}
             onDelete={handleDelete}
             onAddTask={handleAddTask}
@@ -313,7 +382,7 @@ export default function QuadrantContainer() {
         ))}
       </div>
 
-      {/* 拖拽预览层：显示正在拖拽的任务 */}
+      {/* 拖拽预览层 */}
       <DragOverlay>
         {activeTask ? <DraggedTaskPreview task={activeTask} /> : null}
       </DragOverlay>
