@@ -47,28 +47,85 @@ export default function QuadrantContainer() {
    */
   const [activeTask, setActiveTask] = useState<Task | null>(null)
 
-  // ========== 任务操作方法 ==========
+  // ========== 任务操作方法（带乐观更新） ==========
   
   /**
-   * 切换任务完成状态
+   * 切换任务完成状态（带乐观更新）
+   * 
+   * 乐观更新流程：
+   * 1. 保存当前任务的原始状态（只保存这一个任务，不是整个列表）
+   * 2. 立即更新本地缓存（UI 瞬间响应）
+   * 3. 发送 API 请求
+   * 4. 如果失败，只回滚这一个任务的状态（不影响其他并发操作）
    */
   const handleToggleComplete = (id: string) => {
-    const task = tasks.find((t) => t.id === id)
+    // 获取当前缓存数据
+    const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
+    const task = currentTasks.find((t) => t.id === id)
     if (!task) return
 
-    updateTaskMutation.mutate({
-      id,
-      data: {
-        completed: !task.completed,
-      },
+    // 1. 保存当前任务的原始完成状态（只保存需要回滚的字段）
+    const originalCompleted = task.completed
+    
+    // 2. 立即乐观更新
+    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+      return oldTasks.map((t) =>
+        t.id === id ? { ...t, completed: !t.completed } : t
+      )
     })
+
+    // 3. 发送 API 请求
+    updateTaskMutation.mutate(
+      {
+        id,
+        data: { completed: !task.completed },
+      },
+      {
+        // 4. 失败时只回滚这一个任务的状态
+        onError: () => {
+          queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+            return oldTasks.map((t) =>
+              t.id === id ? { ...t, completed: originalCompleted } : t
+            )
+          })
+        },
+      }
+    )
   }
 
   /**
-   * 删除任务
+   * 删除任务（带乐观更新）
+   * 
+   * 乐观更新流程：
+   * 1. 保存被删除任务的完整数据（用于失败时恢复）
+   * 2. 立即从本地缓存中移除任务（UI 瞬间响应）
+   * 3. 发送 API 请求
+   * 4. 如果失败，只把这一个任务加回去（不影响其他并发操作）
    */
   const handleDelete = (id: string) => {
-    deleteTaskMutation.mutate(id)
+    // 获取当前缓存数据
+    const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
+    
+    // 1. 保存被删除任务的完整数据
+    const deletedTask = currentTasks.find((t) => t.id === id)
+    if (!deletedTask) return
+    
+    // 2. 立即乐观更新（从列表中移除）
+    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+      return oldTasks.filter((t) => t.id !== id)
+    })
+
+    // 3. 发送 API 请求
+    deleteTaskMutation.mutate(id, {
+      // 4. 失败时只把这一个任务加回去
+      onError: () => {
+        queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+          // 检查任务是否已经被加回（避免重复）
+          if (oldTasks.some((t) => t.id === id)) return oldTasks
+          return [...oldTasks, deletedTask]
+        })
+      },
+    })
   }
 
   /**
@@ -136,14 +193,18 @@ export default function QuadrantContainer() {
     // 只处理跨象限拖拽
     if (draggedTask.quadrant !== finalQuadrant) {
       /**
-       * 跨象限拖拽处理
+       * 跨象限拖拽处理（并发安全的乐观更新）
        * 
        * 关键：在调用 mutate 之前，先立即乐观更新数据
        * 因为 onMutate 是异步的，在它执行之前数据还是旧的
        * 这会导致 dnd-kit 基于旧数据计算位置，产生回弹
+       * 
+       * 并发安全：
+       * - 只保存和回滚单个任务的象限
+       * - 不会覆盖其他并发操作的结果
        */
-      // 保存更新前的快照，用于错误回滚
-      const previousTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list())
+      // 保存当前任务的原始象限（只保存需要回滚的字段）
+      const originalQuadrant = draggedTask.quadrant
       
       // 立即乐观更新，避免回弹
       queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
@@ -161,11 +222,15 @@ export default function QuadrantContainer() {
           data: { quadrant: finalQuadrant },
         },
         {
+          // 失败时只回滚这一个任务的象限
           onError: () => {
-            // 如果 API 失败，回滚到更新前的状态
-            if (previousTasks) {
-              queryClient.setQueryData(queryKeys.tasks.list(), previousTasks)
-            }
+            queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+              return oldTasks.map((task) =>
+                task.id === taskId
+                  ? { ...task, quadrant: originalQuadrant }
+                  : task
+              )
+            })
           },
         }
       )
