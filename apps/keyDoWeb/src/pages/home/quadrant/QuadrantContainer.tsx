@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
@@ -173,18 +173,39 @@ export default function QuadrantContainer() {
   }
 
   /**
-   * 按象限筛选任务
+   * 按象限分组任务（使用 useMemo 缓存）
    * 
-   * 注意：
-   * - 必须使用 queryClient.getQueryData 获取最新的数据（包括乐观更新）
-   * - 不能直接使用 tasks（来自 useTasks hook），因为它可能滞后于乐观更新
-   * - 排序由后端处理（按创建时间），前端只负责筛选
+   * 优化说明：
+   * - 使用 useMemo 缓存分组结果，避免每次渲染都执行过滤
+   * - 只有当 tasks 变化时才重新计算
+   * - 乐观更新会触发 tasks 变化，从而触发重新计算
+   * 
+   * 返回值：Record<QuadrantType, Task[]>
+   * - Q1: 重要且紧急的任务数组
+   * - Q2: 重要不紧急的任务数组
+   * - Q3: 不重要但紧急的任务数组
+   * - Q4: 不重要不紧急的任务数组
    */
-  const getTasksByQuadrant = (quadrantId: QuadrantType) => {
-    // 优先使用 queryData 中的最新数据（包括乐观更新）
+  const tasksByQuadrant = useMemo(() => {
+    // 优先使用 queryClient 中的最新数据（包括乐观更新）
+    // 这确保拖拽时的即时响应
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
-    return currentTasks.filter((task) => task.quadrant === quadrantId)
-  }
+    
+    // 初始化分组结果
+    const result: Record<QuadrantType, Task[]> = {
+      Q1: [],
+      Q2: [],
+      Q3: [],
+      Q4: [],
+    }
+    
+    // 一次遍历完成分组（O(n) 复杂度）
+    for (const task of currentTasks) {
+      result[task.quadrant].push(task)
+    }
+    
+    return result
+  }, [tasks, queryClient])
 
   // ========== 加载和错误状态 ==========
   
@@ -219,7 +240,7 @@ export default function QuadrantContainer() {
           <Quadrant
             key={config.id}
             quadrantId={config.id}
-            tasks={getTasksByQuadrant(config.id)}
+            tasks={tasksByQuadrant[config.id]}
             isHighlighted={false}
             onToggleComplete={handleToggleComplete}
             onDelete={handleDelete}
