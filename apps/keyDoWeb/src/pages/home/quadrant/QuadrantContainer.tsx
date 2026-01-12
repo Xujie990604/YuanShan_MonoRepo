@@ -2,9 +2,8 @@ import { useState, useMemo } from 'react'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
-import { Checkbox } from '@/components/ui/checkbox'
-import { cn } from '@/lib/utils'
 import Quadrant from './Quadrant'
+import DraggedTaskPreview from './DraggedTaskPreview'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
@@ -314,20 +313,9 @@ export default function QuadrantContainer() {
         ))}
       </div>
 
+      {/* 拖拽预览层：显示正在拖拽的任务 */}
       <DragOverlay>
-        {activeTask ? (
-          <div className="flex items-center gap-2 p-3 rounded-md bg-card border border-border shadow-lg opacity-90">
-            <Checkbox checked={activeTask.completed} disabled />
-            <span
-              className={cn(
-                'text-sm',
-                activeTask.completed && 'line-through text-muted-foreground'
-              )}
-            >
-              {activeTask.title}
-            </span>
-          </div>
-        ) : null}
+        {activeTask ? <DraggedTaskPreview task={activeTask} /> : null}
       </DragOverlay>
     </DndContext>
   )
