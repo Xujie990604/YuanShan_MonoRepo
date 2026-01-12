@@ -141,9 +141,6 @@ export default function QuadrantContainer() {
        * 关键：在调用 mutate 之前，先立即乐观更新数据
        * 因为 onMutate 是异步的，在它执行之前数据还是旧的
        * 这会导致 dnd-kit 基于旧数据计算位置，产生回弹
-       * 
-       * 注意：这里已经乐观更新了，useUpdateTask 的 onMutate 中不再需要乐观更新
-       * 但需要保存更新前的快照，用于错误回滚
        */
       // 保存更新前的快照，用于错误回滚
       const previousTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list())
@@ -158,14 +155,12 @@ export default function QuadrantContainer() {
       })
 
       // 然后发送持久化请求
-      // 注意：useUpdateTask 的 onMutate 中不再乐观更新，只负责保存快照和回滚
       updateTaskMutation.mutate(
         {
           id: taskId,
           data: { quadrant: finalQuadrant },
         },
         {
-          // 传入更新前的快照，用于错误回滚
           onError: () => {
             // 如果 API 失败，回滚到更新前的状态
             if (previousTasks) {
@@ -175,7 +170,6 @@ export default function QuadrantContainer() {
         }
       )
     }
-    // 同象限内不再支持排序，直接返回
   }
 
   /**

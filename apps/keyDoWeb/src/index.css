@@ -24,6 +24,12 @@
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
     --radius: 0.5rem;
+
+    /* 四象限语义化颜色 */
+    --quadrant-q1: 0 85% 97%;           /* 重要且紧急 - 红色系 */
+    --quadrant-q2: 25 95% 95%;          /* 重要不紧急 - 橙色系 */
+    --quadrant-q3: 210 100% 96%;        /* 不重要但紧急 - 蓝色系 */
+    --quadrant-q4: 142 76% 96%;         /* 不重要不紧急 - 绿色系 */
   }
 
   .dark {
@@ -46,6 +52,12 @@
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
+
+    /* 四象限语义化颜色（暗色模式） */
+    --quadrant-q1: 0 50% 15%;           /* 重要且紧急 - 红色系 */
+    --quadrant-q2: 25 50% 15%;          /* 重要不紧急 - 橙色系 */
+    --quadrant-q3: 210 50% 15%;         /* 不重要但紧急 - 蓝色系 */
+    --quadrant-q4: 142 40% 15%;         /* 不重要不紧急 - 绿色系 */
   }
 }
 
@@ -55,5 +67,21 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* 四象限背景色工具类 */
+@layer utilities {
+  .bg-quadrant-q1 {
+    background-color: hsl(var(--quadrant-q1));
+  }
+  .bg-quadrant-q2 {
+    background-color: hsl(var(--quadrant-q2));
+  }
+  .bg-quadrant-q3 {
+    background-color: hsl(var(--quadrant-q3));
+  }
+  .bg-quadrant-q4 {
+    background-color: hsl(var(--quadrant-q4));
   }
 }
