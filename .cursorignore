@@ -1,0 +1,7 @@
+# 排除大文件，减少 Token 浪费
+node_modules/
+dist/
+build/
+.git/
+*.log
+*.bin
