@@ -19,10 +19,11 @@ COPY packages ./packages
 # 复制后端项目
 COPY server/keyDoServer ./server/keyDoServer
 
-# 安装所有依赖（包括 workspace 依赖）
+# 安装所有依赖（包括 workspace 依赖和 devDependencies）
+# monorepo 中根目录的 install 会安装所有 workspace 包的依赖
 RUN pnpm install --frozen-lockfile
 
-# 构建内部依赖包
+# 构建内部依赖包（依赖已由根目录安装好）
 # 1. 构建 tools
 RUN cd packages/tools && pnpm build
 
