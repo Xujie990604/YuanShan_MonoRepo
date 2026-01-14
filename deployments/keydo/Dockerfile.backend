@@ -72,14 +72,14 @@ COPY server/keyDoServer/prisma ./server/keyDoServer/prisma
 # 先安装所有依赖（包括 devDependencies，因为需要 prisma CLI 来生成 client）
 RUN pnpm install --frozen-lockfile
 
+# 复制构建产物（必须在生成 Prisma Client 之前复制）
+COPY --from=builder /app/server/keyDoServer/dist ./server/keyDoServer/dist
+
 # 生成 Prisma Client（使用项目中的 prisma 版本）
 RUN cd server/keyDoServer && pnpm exec prisma generate
 
-# 清理 devDependencies（可选，减小镜像体积）
+# 清理 devDependencies（减小镜像体积）
 RUN pnpm prune --prod
-
-# 复制构建产物
-COPY --from=builder /app/server/keyDoServer/dist ./server/keyDoServer/dist
 
 WORKDIR /app/server/keyDoServer
 
