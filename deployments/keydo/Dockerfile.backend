@@ -87,4 +87,4 @@ WORKDIR /app/server/keyDoServer
 EXPOSE 6040
 
 # 启动命令（在 docker-compose.yml 中覆盖，先执行迁移再启动服务）
-CMD ["node", "dist/src/main.js"]
+CMD ["node", "dist/main.js"]

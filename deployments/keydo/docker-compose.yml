@@ -48,7 +48,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && node dist/src/main.js"
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
 
   # 前端服务（Nginx + 静态文件）
   frontend:
