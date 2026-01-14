@@ -3,6 +3,9 @@
 # ===================================
 FROM node:20-alpine AS builder
 
+# 安装系统依赖（Prisma 需要 OpenSSL）
+RUN apk add --no-cache openssl
+
 # 安装 pnpm
 RUN npm install -g pnpm@9
 
@@ -40,6 +43,9 @@ RUN cd server/keyDoServer && pnpm build
 # Stage 2: 生产阶段
 # ===================================
 FROM node:20-alpine AS production
+
+# 安装系统依赖（Prisma 运行时需要 OpenSSL）
+RUN apk add --no-cache openssl
 
 # 安装 pnpm
 RUN npm install -g pnpm@9
