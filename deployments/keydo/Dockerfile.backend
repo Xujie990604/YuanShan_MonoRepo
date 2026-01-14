@@ -66,8 +66,8 @@ COPY server/keyDoServer/prisma ./server/keyDoServer/prisma
 # 仅安装生产依赖
 RUN pnpm install --frozen-lockfile --prod
 
-# 生成 Prisma Client（在生产阶段重新生成，而不是从 builder 复制）
-RUN cd server/keyDoServer && npx prisma generate
+# 生成 Prisma Client（使用项目中的 prisma 版本，不是最新版）
+RUN cd server/keyDoServer && pnpm exec prisma generate
 
 # 复制构建产物
 COPY --from=builder /app/server/keyDoServer/dist ./server/keyDoServer/dist
