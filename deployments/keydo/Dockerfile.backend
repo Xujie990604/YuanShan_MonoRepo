@@ -60,18 +60,17 @@ COPY packages/keyDoContract/dist ./packages/keyDoContract/dist
 # 复制后端 package.json
 COPY server/keyDoServer/package.json ./server/keyDoServer/package.json
 
+# 复制 Prisma schema（需要在安装依赖前复制，因为 prisma 需要读取 schema）
+COPY server/keyDoServer/prisma ./server/keyDoServer/prisma
+
 # 仅安装生产依赖
 RUN pnpm install --frozen-lockfile --prod
 
-# 复制 Prisma schema 和 migrations（用于运行时迁移）
-COPY server/keyDoServer/prisma ./server/keyDoServer/prisma
+# 生成 Prisma Client（在生产阶段重新生成，而不是从 builder 复制）
+RUN cd server/keyDoServer && npx prisma generate
 
 # 复制构建产物
 COPY --from=builder /app/server/keyDoServer/dist ./server/keyDoServer/dist
-
-# 复制生成的 Prisma Client
-COPY --from=builder /app/server/keyDoServer/node_modules/.prisma ./server/keyDoServer/node_modules/.prisma
-COPY --from=builder /app/server/keyDoServer/node_modules/@prisma ./server/keyDoServer/node_modules/@prisma
 
 WORKDIR /app/server/keyDoServer
 
