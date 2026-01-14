@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: keydo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: keydo
+      POSTGRES_PASSWORD: YuanShan202204++..
+      POSTGRES_DB: keydo_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"  # 映射到宿主机的 5432 端口
+    networks:
+      - keydo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keydo -d keydo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端服务（NestJS）
+  backend:
+    build:
+      context: ../../  # 指向 monorepo 根目录
+      dockerfile: deployments/keydo/Dockerfile.backend
+    container_name: keydo-backend
+    restart: unless-stopped
+    environment:
+      # 数据库连接（使用容器内网络）
+      DATABASE_URL: "postgresql://keydo:YuanShan202204++..@postgres:5432/keydo_db?schema=public"
+      # JWT 配置
+      JWT_SECRET: "05e943aac3de2c802ce901231ed644411c20348f8054bd4526ff4310b747e131"
+      JWT_EXPIRES_IN: "30d"
+      # 服务端口
+      PORT: 6040
+      # 运行环境
+      NODE_ENV: production
+      # CORS
+      CORS_ORIGIN: "http://101.42.19.131:3000"
+    ports:
+      - "6040:6040"  # 映射到宿主机的 6040 端口
+    networks:
+      - keydo-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && node dist/src/main.js"
+
+  # 前端服务（Nginx + 静态文件）
+  frontend:
+    build:
+      context: ../../  # 指向 monorepo 根目录
+      dockerfile: deployments/keydo/Dockerfile.frontend
+    container_name: keydo-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"  # 映射到宿主机的 3000 端口（你可以改为其他端口）
+    networks:
+      - keydo-network
+    depends_on:
+      - backend
+    environment:
+      # Nginx 可以通过环境变量传递后端 API 地址
+      BACKEND_URL: http://backend:6040
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  keydo-network:
+    driver: bridge

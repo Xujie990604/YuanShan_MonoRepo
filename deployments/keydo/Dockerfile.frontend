@@ -1,0 +1,50 @@
+# ===================================
+# Stage 1: 构建阶段
+# ===================================
+FROM node:20-alpine AS builder
+
+# 安装 pnpm
+RUN npm install -g pnpm@9
+
+WORKDIR /app
+
+# 复制 workspace 配置文件
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+
+# 复制所有内部依赖包（packages/tools, packages/keyDoContract）
+COPY packages ./packages
+
+# 复制前端项目
+COPY apps/keyDoWeb ./apps/keyDoWeb
+
+# 安装所有依赖（包括 workspace 依赖）
+RUN pnpm install --frozen-lockfile
+
+# 构建内部依赖包
+# 1. 构建 tools
+RUN cd packages/tools && pnpm build
+
+# 2. 构建 keyDoContract
+RUN cd packages/keyDoContract && pnpm build
+
+# 构建前端项目
+RUN cd apps/keyDoWeb && pnpm build
+
+# ===================================
+# Stage 2: 生产阶段（Nginx）
+# ===================================
+FROM nginx:alpine
+
+# 复制构建产物到 Nginx 静态文件目录
+COPY --from=builder /app/apps/keyDoWeb/dist /usr/share/nginx/html
+
+# 复制自定义 Nginx 配置
+COPY deployments/keydo/nginx.conf /etc/nginx/conf.d/default.conf
+
+# 暴露端口
+EXPOSE 80
+
+# 启动 Nginx
+CMD ["nginx", "-g", "daemon off;"]

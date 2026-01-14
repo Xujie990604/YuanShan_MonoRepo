@@ -1,0 +1,81 @@
+# ===================================
+# Stage 1: 构建阶段
+# ===================================
+FROM node:20-alpine AS builder
+
+# 安装 pnpm
+RUN npm install -g pnpm@9
+
+WORKDIR /app
+
+# 复制 workspace 配置文件
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+
+# 复制所有内部依赖包（packages/tools, packages/keyDoContract）
+COPY packages ./packages
+
+# 复制后端项目
+COPY server/keyDoServer ./server/keyDoServer
+
+# 安装所有依赖（包括 workspace 依赖）
+RUN pnpm install --frozen-lockfile
+
+# 构建内部依赖包
+# 1. 构建 tools
+RUN cd packages/tools && pnpm build
+
+# 2. 构建 keyDoContract
+RUN cd packages/keyDoContract && pnpm build
+
+# 生成 Prisma Client
+RUN cd server/keyDoServer && pnpm prisma:generate
+
+# 构建后端项目
+RUN cd server/keyDoServer && pnpm build
+
+# ===================================
+# Stage 2: 生产阶段
+# ===================================
+FROM node:20-alpine AS production
+
+# 安装 pnpm
+RUN npm install -g pnpm@9
+
+WORKDIR /app
+
+# 复制 workspace 配置文件
+COPY pnpm-workspace.yaml ./
+COPY package.json ./
+COPY pnpm-lock.yaml ./
+
+# 复制 packages（仅需要 package.json 和构建产物）
+COPY packages/tools/package.json ./packages/tools/package.json
+COPY packages/tools/dist ./packages/tools/dist
+COPY packages/keyDoContract/package.json ./packages/keyDoContract/package.json
+COPY packages/keyDoContract/dist ./packages/keyDoContract/dist
+
+# 复制后端 package.json
+COPY server/keyDoServer/package.json ./server/keyDoServer/package.json
+
+# 仅安装生产依赖
+RUN pnpm install --frozen-lockfile --prod
+
+# 复制 Prisma schema 和 migrations（用于运行时迁移）
+COPY server/keyDoServer/prisma ./server/keyDoServer/prisma
+
+# 复制构建产物
+COPY --from=builder /app/server/keyDoServer/dist ./server/keyDoServer/dist
+
+# 复制生成的 Prisma Client
+COPY --from=builder /app/server/keyDoServer/node_modules/.prisma ./server/keyDoServer/node_modules/.prisma
+COPY --from=builder /app/server/keyDoServer/node_modules/@prisma ./server/keyDoServer/node_modules/@prisma
+
+WORKDIR /app/server/keyDoServer
+
+# 暴露端口
+EXPOSE 6040
+
+# 启动命令（在 docker-compose.yml 中覆盖，先执行迁移再启动服务）
+CMD ["node", "dist/src/main.js"]

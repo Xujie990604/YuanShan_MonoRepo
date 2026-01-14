@@ -1,0 +1,61 @@
+# Node modules
+**/node_modules
+**/npm-debug.log
+**/yarn-error.log
+**/pnpm-debug.log
+
+# 构建输出
+**/dist
+**/build
+**/.next
+
+# 开发文件
+**/.git
+**/.gitignore
+**/.env*
+**/.DS_Store
+**/.vscode
+**/.idea
+
+# 测试文件
+**/coverage
+**/test
+**/*.test.ts
+**/*.spec.ts
+
+# 日志
+**/logs
+**/*.log
+
+# 临时文件
+**/tmp
+**/temp
+
+# Prisma
+server/keyDoServer/prisma/migrations/*
+!server/keyDoServer/prisma/migrations/migration_lock.toml
+
+# Docker 文件
+**/docker-compose*.yml
+**/Dockerfile*
+**/.dockerignore
+
+# 文档
+**/*.md
+!README.md
+
+# 其他项目（不需要的 apps）
+apps/adminSystem
+apps/excludeDependencies
+apps/frontendplugin
+apps/useSubpackages
+
+# 其他服务器项目
+server/noOne
+
+# 包（除了需要的）
+packages/cli
+packages/ui
+
+# 部署文件
+deployments/
