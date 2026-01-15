@@ -31,9 +31,9 @@
 **/tmp
 **/temp
 
-# Prisma
-server/keyDoServer/prisma/migrations/*
-!server/keyDoServer/prisma/migrations/migration_lock.toml
+# Prisma（保留迁移文件，生产环境需要）
+# server/keyDoServer/prisma/migrations/*
+# !server/keyDoServer/prisma/migrations/migration_lock.toml
 
 # Docker 文件
 **/docker-compose*.yml
