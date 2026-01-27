@@ -123,13 +123,14 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
           
           {/* 详情图标（有详情时显示） */}
           {hasDescription && (
-            <FileText
-              className={cn(
-                'h-3.5 w-3.5 shrink-0 text-muted-foreground',
-                task.completed && 'opacity-50'
-              )}
-              title="包含详情"
-            />
+            <span title="包含详情">
+              <FileText
+                className={cn(
+                  'h-3.5 w-3.5 shrink-0 text-muted-foreground',
+                  task.completed && 'opacity-50'
+                )}
+              />
+            </span>
           )}
         </div>
       </div>
