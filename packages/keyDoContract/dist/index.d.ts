@@ -68,6 +68,7 @@ type QuadrantType = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 interface Task {
     id: string;
     title: string;
+    description?: string;
     quadrant: QuadrantType;
     completed: boolean;
     order: string;
@@ -79,15 +80,18 @@ interface Task {
  */
 declare const createTaskSchema: z.ZodObject<{
     title: z.ZodString;
+    description: z.ZodOptional<z.ZodString>;
     quadrant: z.ZodEnum<["Q1", "Q2", "Q3", "Q4"]>;
     order: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     quadrant: "Q1" | "Q2" | "Q3" | "Q4";
+    description?: string | undefined;
     order?: string | undefined;
 }, {
     title: string;
     quadrant: "Q1" | "Q2" | "Q3" | "Q4";
+    description?: string | undefined;
     order?: string | undefined;
 }>;
 /**
@@ -99,16 +103,19 @@ type CreateTaskInput = z.infer<typeof createTaskSchema>;
  */
 declare const updateTaskSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodString>;
     quadrant: z.ZodOptional<z.ZodEnum<["Q1", "Q2", "Q3", "Q4"]>>;
     completed: z.ZodOptional<z.ZodBoolean>;
     order: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     title?: string | undefined;
+    description?: string | undefined;
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     completed?: boolean | undefined;
 }, {
     title?: string | undefined;
+    description?: string | undefined;
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     completed?: boolean | undefined;

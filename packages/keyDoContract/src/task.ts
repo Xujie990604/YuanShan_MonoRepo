@@ -11,6 +11,7 @@ export type QuadrantType = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 export interface Task {
   id: string;
   title: string;
+  description?: string; // 任务详情（可选）
   quadrant: QuadrantType;
   completed: boolean;
   order: string; // lexorank 排序值（字符串）
@@ -22,7 +23,12 @@ export interface Task {
  * 创建任务请求参数 Schema
  */
 export const createTaskSchema = z.object({
-  title: z.string().min(1, '任务标题不能为空'),
+  title: z.string()
+    .min(1, '任务标题不能为空')
+    .max(64, '任务标题不能超过 64 个字符'),
+  description: z.string()
+    .max(1000, '任务详情不能超过 1000 个字符')
+    .optional(), // 任务详情（可选）
   quadrant: z.enum(['Q1', 'Q2', 'Q3', 'Q4'], {
     errorMap: () => ({ message: '象限类型必须是 Q1、Q2、Q3 或 Q4' }),
   }),
@@ -38,7 +44,13 @@ export type CreateTaskInput = z.infer<typeof createTaskSchema>;
  * 更新任务请求参数 Schema
  */
 export const updateTaskSchema = z.object({
-  title: z.string().min(1, '任务标题不能为空').optional(),
+  title: z.string()
+    .min(1, '任务标题不能为空')
+    .max(64, '任务标题不能超过 64 个字符')
+    .optional(),
+  description: z.string()
+    .max(1000, '任务详情不能超过 1000 个字符')
+    .optional(), // 任务详情（可选）
   quadrant: z.enum(['Q1', 'Q2', 'Q3', 'Q4'], {
     errorMap: () => ({ message: '象限类型必须是 Q1、Q2、Q3 或 Q4' }),
   }).optional(),

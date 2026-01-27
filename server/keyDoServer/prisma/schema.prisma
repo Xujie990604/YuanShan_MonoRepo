@@ -21,14 +21,15 @@ model User {
 }
 
 model Task {
-  id        String   @id @default(uuid())
-  userId    Int      @map("user_id")
-  title     String   @db.VarChar(255)
-  quadrant  String   @db.VarChar(2) // Q1, Q2, Q3, Q4
-  completed Boolean  @default(false)
-  order     String   @db.VarChar(255) // lexorank 排序值
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(uuid())
+  userId      Int      @map("user_id")
+  title       String   @db.VarChar(255)
+  description String?  @db.Text // 任务详情（可选，可为 NULL）
+  quadrant    String   @db.VarChar(2) // Q1, Q2, Q3, Q4
+  completed   Boolean  @default(false)
+  order       String   @db.VarChar(255) // lexorank 排序值
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

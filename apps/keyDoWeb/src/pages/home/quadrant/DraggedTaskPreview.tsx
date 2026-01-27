@@ -1,3 +1,4 @@
+import { FileText } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import type { Task } from '@yuan-shan/keydo-contract'
@@ -20,8 +21,14 @@ interface DraggedTaskPreviewProps {
  * - 复用 TaskCard 的基础样式
  * - 添加阴影和轻微透明度，突出"正在拖拽"的视觉效果
  * - 禁用交互（Checkbox 为 disabled）
+ * - 显示详情图标（与 TaskCard 一致）
  */
 export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
+  /**
+   * 判断任务是否有详情
+   */
+  const hasDescription = !!task.description && task.description.trim() !== ''
+
   return (
     <div
       className={cn(
@@ -36,15 +43,30 @@ export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
       {/* 复选框（禁用状态，仅用于显示） */}
       <Checkbox checked={task.completed} disabled />
 
-      {/* 任务标题 */}
-      <span
-        className={cn(
-          'text-sm',
-          task.completed && 'line-through text-muted-foreground'
+      {/* 任务内容区域 */}
+      <div className="flex-1 flex items-center gap-1.5 min-w-0">
+        {/* 任务标题 */}
+        <span
+          className={cn(
+            'text-sm truncate flex-1 min-w-0',
+            task.completed && 'line-through text-muted-foreground'
+          )}
+          title={task.title}  // hover 显示完整标题
+        >
+          {task.title}
+        </span>
+
+        {/* 详情图标（有详情时显示） */}
+        {hasDescription && (
+          <FileText
+            className={cn(
+              'h-3.5 w-3.5 shrink-0 text-muted-foreground',
+              task.completed && 'opacity-50'
+            )}
+            title="包含详情"
+          />
         )}
-      >
-        {task.title}
-      </span>
+      </div>
     </div>
   )
 }

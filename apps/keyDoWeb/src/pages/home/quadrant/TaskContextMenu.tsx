@@ -3,29 +3,34 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
+import type { Task } from '@yuan-shan/keydo-contract'
 
 /**
  * 任务右键菜单组件
  * 
  * 功能：
- * 1. 显示右键菜单（删除选项）
+ * 1. 显示右键菜单（编辑、删除选项）
  * 2. 在鼠标位置显示菜单
+ * 3. 已完成任务不显示编辑选项
  * 
  * 使用方式：
- * <TaskContextMenu taskId={task.id} onDelete={handleDelete}>
+ * <TaskContextMenu task={task} onEdit={handleEdit} onDelete={handleDelete}>
  *   <div onContextMenu={...}>任务卡片内容</div>
  * </TaskContextMenu>
  */
 interface TaskContextMenuProps {
-  taskId: string
+  task: Task
+  onEdit: (task: Task) => void
   onDelete: (id: string) => void
   children: React.ReactElement
 }
 
 export default function TaskContextMenu({
-  taskId,
+  task,
+  onEdit,
   onDelete,
   children,
 }: TaskContextMenuProps) {
@@ -87,10 +92,25 @@ export default function TaskContextMenu({
         }}
         onCloseAutoFocus={(e) => e.preventDefault()} // 阻止自动聚焦
       >
+        {/* 编辑选项（已完成任务不显示） */}
+        {!task.completed && (
+          <>
+            <DropdownMenuItem
+              onClick={() => {
+                onEdit(task)
+                setContextMenuOpen(false)
+              }}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              编辑
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem
           className="text-destructive focus:text-destructive" // 危险操作样式（红色）
           onClick={() => {
-            onDelete(taskId) // 调用删除回调
+            onDelete(task.id) // 调用删除回调
             setContextMenuOpen(false) // 关闭菜单
           }}
         >

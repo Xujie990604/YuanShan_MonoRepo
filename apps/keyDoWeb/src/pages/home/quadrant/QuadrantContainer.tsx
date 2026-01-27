@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react'
-import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
+import { DndContext, DragOverlay, closestCenter, useSensors, useSensor, PointerSensor } from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent, DragOverEvent } from '@dnd-kit/core'
 import { useQueryClient } from '@tanstack/react-query'
 import { getRankBetween } from '@yuan-shan/tools'
 import Quadrant from './Quadrant'
 import DraggedTaskPreview from './DraggedTaskPreview'
+import TaskFormDialog from './TaskFormDialog'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
@@ -29,6 +30,29 @@ export default function QuadrantContainer() {
   const updateTaskMutation = useUpdateTask()
   const deleteTaskMutation = useDeleteTask()
   const queryClient = useQueryClient()
+
+  // ========== 拖拽传感器配置（区分点击和拖动） ==========
+  
+  /**
+   * 配置拖拽传感器，设置激活阈值
+   * - distance: 8px - 移动超过 8px 才激活拖拽
+   * - 这样点击时不会触发拖拽，只有拖动时才会触发
+   */
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 移动 8px 后才激活拖拽
+      },
+    })
+  )
+
+  // ========== 对话框状态 ==========
+  
+  /**
+   * 编辑对话框状态
+   */
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   // ========== 拖拽状态 ==========
   
@@ -106,8 +130,66 @@ export default function QuadrantContainer() {
   /**
    * 添加新任务（order 由服务端计算）
    */
-  const handleAddTask = (quadrant: QuadrantType, title: string) => {
-    createTaskMutation.mutate({ title, quadrant })
+  const handleAddTask = (quadrant: QuadrantType, data: { title: string; description?: string }) => {
+    createTaskMutation.mutate({ 
+      title: data.title, 
+      description: data.description,
+      quadrant 
+    })
+  }
+
+  /**
+   * 编辑任务
+   */
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task)
+    setEditDialogOpen(true)
+  }
+
+  /**
+   * 编辑任务确认回调
+   */
+  const handleEditConfirm = (data: { title: string; description?: string }) => {
+    if (!editingTask) return
+    
+    // 保存原始值用于回滚
+    const originalTitle = editingTask.title
+    const originalDescription = editingTask.description
+
+    // 乐观更新
+    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+      return oldTasks.map((t) =>
+        t.id === editingTask.id 
+          ? { ...t, title: data.title, description: data.description } 
+          : t
+      )
+    })
+
+    // API 请求
+    updateTaskMutation.mutate(
+      { 
+        id: editingTask.id, 
+        data: { 
+          title: data.title,
+          description: data.description,
+        } 
+      },
+      {
+        onError: () => {
+          // 回滚
+          queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
+            return oldTasks.map((t) =>
+              t.id === editingTask.id 
+                ? { ...t, title: originalTitle, description: originalDescription } 
+                : t
+            )
+          })
+        },
+      }
+    )
+
+    setEditDialogOpen(false)
+    setEditingTask(null)
   }
 
   // ========== 拖拽功能处理 ==========
@@ -361,12 +443,14 @@ export default function QuadrantContainer() {
   // ========== 渲染组件 ==========
   
   return (
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
       <div className="flex-1 h-full grid grid-cols-2 grid-rows-2 gap-4 p-4">
         {QUADRANT_CONFIGS.map((config) => (
           <Quadrant
@@ -378,6 +462,7 @@ export default function QuadrantContainer() {
             onToggleComplete={handleToggleComplete}
             onDelete={handleDelete}
             onAddTask={handleAddTask}
+            onEdit={handleEditTask}
           />
         ))}
       </div>
@@ -387,5 +472,15 @@ export default function QuadrantContainer() {
         {activeTask ? <DraggedTaskPreview task={activeTask} /> : null}
       </DragOverlay>
     </DndContext>
+
+    {/* 编辑任务对话框 */}
+    <TaskFormDialog
+      open={editDialogOpen}
+      mode="edit"
+      task={editingTask}
+      onOpenChange={setEditDialogOpen}
+      onConfirm={handleEditConfirm}
+    />
+    </>
   )
 }

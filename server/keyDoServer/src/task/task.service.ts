@@ -48,7 +48,7 @@ export class TaskService {
    * 使用 LexoRank 计算 order 值
    */
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
-    const { title, quadrant } = createTaskInput;
+    const { title, description, quadrant } = createTaskInput;
 
     // 获取目标象限最后一个未完成任务的 order
     // 按 order 降序排列，取第一个即为最后一个任务
@@ -68,6 +68,7 @@ export class TaskService {
       data: {
         userId,
         title,
+        description, // 新增：保存任务详情
         quadrant,
         order: newOrder,
         completed: false,
@@ -82,6 +83,7 @@ export class TaskService {
    * 
    * 支持更新的字段：
    * - title: 任务标题
+   * - description: 任务详情
    * - quadrant: 所属象限（跨象限拖拽）
    * - completed: 完成状态
    * - order: 排序值（象限内排序或跨象限后的位置）
@@ -96,13 +98,20 @@ export class TaskService {
       throw new NotFoundException('任务不存在');
     }
 
-    const { title, quadrant, completed, order } = updateTaskInput;
+    const { title, description, quadrant, completed, order } = updateTaskInput;
 
     // 构建更新数据，只包含传入的字段
+    // 注意：description 的处理
+    // - undefined: 不更新该字段
+    // - 空字符串 '': 清空该字段（转为 null）
+    // - 有值: 更新为该值
     const task = await this.prisma.task.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
+        ...(description !== undefined && { 
+          description: description === '' ? null : description // 空字符串转为 null 清空字段
+        }),
         ...(quadrant !== undefined && { quadrant }),
         ...(completed !== undefined && { completed }),
         ...(order !== undefined && { order }),  // 支持 order 更新
@@ -136,6 +145,7 @@ export class TaskService {
     return {
       id: task.id,
       title: task.title,
+      description: task.description ?? undefined, // 新增：返回 description（null 转为 undefined）
       quadrant: task.quadrant as any,
       completed: task.completed,
       order: task.order,

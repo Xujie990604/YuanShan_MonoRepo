@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import TaskCard from './TaskCard'
-import AddTaskDialog from './AddTaskDialog'
+import TaskFormDialog from './TaskFormDialog'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { cn } from '@/lib/utils'
@@ -25,7 +25,8 @@ interface QuadrantProps {
   currentOverQuadrant: QuadrantType | null
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
-  onAddTask: (quadrant: QuadrantType, title: string) => void
+  onAddTask: (quadrant: QuadrantType, data: { title: string; description?: string }) => void
+  onEdit: (task: Task) => void
 }
 
 /**
@@ -49,8 +50,10 @@ export default function Quadrant({
   onToggleComplete,
   onDelete,
   onAddTask,
+  onEdit,
 }: QuadrantProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  // 添加任务对话框状态
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
 
   // ========== @dnd-kit 拖拽目标功能 ==========
   
@@ -116,8 +119,20 @@ export default function Quadrant({
     originQuadrant !== quadrantId && 
     currentOverQuadrant === quadrantId
 
-  const handleAddTaskConfirm = (title: string) => {
-    onAddTask(quadrantId, title)
+  /**
+   * 处理添加任务确认
+   */
+  const handleAddTaskConfirm = (data: { title: string; description?: string }) => {
+    onAddTask(quadrantId, data)
+  }
+
+  /**
+   * 处理点击编辑任务（从右键菜单或其他入口触发）
+   */
+  const handleEditClick = (task: Task) => {
+    // 已完成任务不允许编辑（在 TaskCard 中已经处理，这里再次确认）
+    if (task.completed) return
+    onEdit(task)
   }
 
   /**
@@ -132,6 +147,7 @@ export default function Quadrant({
         hoverColor={config.hoverColor}
         onToggleComplete={onToggleComplete}
         onDelete={onDelete}
+        onEdit={handleEditClick}
       />
     ))
 
@@ -193,7 +209,7 @@ export default function Quadrant({
             variant="ghost"
             size="icon"
             className="h-8 w-8"
-            onClick={() => setIsDialogOpen(true)}
+            onClick={() => setIsAddDialogOpen(true)}
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -205,7 +221,7 @@ export default function Quadrant({
         {/* 未完成任务列表 */}
         {incompleteTasks.length > 0 && renderTaskList()}
 
-        {/* 已完成任务列表（不支持拖拽排序） */}
+        {/* 已完成任务列表（不支持拖拽排序，不支持编辑） */}
         {completedTasks.length > 0 && (
           <div className="space-y-2">
             <div className="text-xs text-muted-foreground font-medium">
@@ -218,6 +234,7 @@ export default function Quadrant({
                 hoverColor={config.hoverColor}
                 onToggleComplete={onToggleComplete}
                 onDelete={onDelete}
+                onEdit={handleEditClick}  // 已完成任务会在 handleEditClick 中被过滤
               />
             ))}
           </div>
@@ -232,9 +249,11 @@ export default function Quadrant({
       </div>
 
       {/* 添加任务对话框 */}
-      <AddTaskDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+      <TaskFormDialog
+        open={isAddDialogOpen}
+        mode="add"
+        quadrant={quadrantId}
+        onOpenChange={setIsAddDialogOpen}
         onConfirm={handleAddTaskConfirm}
       />
     </div>
