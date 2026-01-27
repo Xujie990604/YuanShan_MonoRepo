@@ -1,7 +1,18 @@
 import { Settings, LogOut } from 'lucide-react'
+import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import ColorfulLogo from '@/components/ColorfulLogo'
 import { useAuthStore } from '@/store/auth'
 
@@ -16,6 +27,7 @@ import { useAuthStore } from '@/store/auth'
 export default function Sidebar() {
   const queryClient = useQueryClient()
   const clearAuth = useAuthStore((state) => state.clearAuth)
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
 
   /**
    * 退出登录
@@ -80,12 +92,33 @@ export default function Sidebar() {
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          onClick={handleLogout}
+          onClick={() => setShowLogoutDialog(true)}
         >
           <LogOut className="w-4 h-4" />
           <span>退出登录</span>
         </Button>
       </div>
+
+      {/* 退出登录确认弹窗 */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认退出登录</AlertDialogTitle>
+            <AlertDialogDescription>
+              退出登录后，您需要重新登录才能继续使用。是否确认退出？
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleLogout}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              确认退出
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </aside>
   )
 }
