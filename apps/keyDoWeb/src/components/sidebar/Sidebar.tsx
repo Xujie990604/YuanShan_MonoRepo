@@ -52,19 +52,19 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-60 h-screen flex flex-col bg-sidebar border-r border-sidebar-border">
+    <aside className="w-40 h-screen flex flex-col bg-sidebar border-r border-sidebar-border">
       {/* Logo 区域 */}
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center gap-3">
           {/* 彩色四象限 Logo */}
           <ColorfulLogo size="md" />
           {/* 应用名称和标语 */}
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-sidebar-foreground leading-tight">
+            <h1 className="text-lg font-semibold text-sidebar-foreground leading-tight mb-1">
               KeyDo
             </h1>
             <p className="text-xs text-muted-foreground">
-              四象限任务管理
+              要事优先
             </p>
           </div>
         </div>
@@ -73,14 +73,14 @@ export default function Sidebar() {
       <Separator />
 
       {/* 中间空白区域（未来可添加导航菜单） */}
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-3">
         {/* 预留：未来可以添加导航菜单项 */}
       </div>
 
       <Separator />
 
       {/* 底部操作区域 */}
-      <div className="p-4 space-y-2">
+      <div className="p-3 space-y-2">
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

@@ -27,7 +27,7 @@ export function showToast(message: string, options: ToastOptions = {}) {
   if (!container) {
     container = document.createElement('div')
     container.id = 'simple-toast-container'
-    container.className = 'fixed top-4 right-4 z-[9999] flex flex-col gap-2'
+    container.className = 'fixed top-24 left-4 z-[9999] flex flex-col gap-2'
     document.body.appendChild(container)
   }
 
@@ -37,7 +37,7 @@ export function showToast(message: string, options: ToastOptions = {}) {
     ${typeStyles[type]}
     text-white px-4 py-3 rounded-lg shadow-lg
     transform transition-all duration-300
-    translate-x-[400px] opacity-0
+    translate-x-[-400px] opacity-0
   `.trim()
   toast.textContent = message
   
@@ -54,7 +54,7 @@ export function showToast(message: string, options: ToastOptions = {}) {
   // 自动消失
   setTimeout(() => {
     // 动画：退出
-    toast.style.transform = 'translateX(400px)'
+    toast.style.transform = 'translateX(-400px)'
     toast.style.opacity = '0'
     
     // 移除元素
