@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Q1: Top Left - Red -->
+  <rect x="0" y="0" width="31" height="31" rx="6" fill="hsl(0, 72%, 58%)"/>
+  
+  <!-- Q2: Top Right - Orange -->
+  <rect x="33" y="0" width="31" height="31" rx="6" fill="hsl(38, 92%, 50%)"/>
+  
+  <!-- Q3: Bottom Left - Blue -->
+  <rect x="0" y="33" width="31" height="31" rx="6" fill="hsl(217, 91%, 60%)"/>
+  
+  <!-- Q4: Bottom Right - Green -->
+  <rect x="33" y="33" width="31" height="31" rx="6" fill="hsl(158, 64%, 52%)"/>
+</svg>
