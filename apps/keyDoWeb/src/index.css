@@ -37,6 +37,12 @@
     --quadrant-q2: 25 95% 95%;          /* 重要不紧急 - 橙色系 */
     --quadrant-q3: 210 100% 96%;        /* 不重要但紧急 - 蓝色系 */
     --quadrant-q4: 142 76% 96%;         /* 不重要不紧急 - 绿色系 */
+
+    /* 四象限 Logo 颜色（与象限色相一致，但更饱和、更深） */
+    --quadrant-logo-q1: 0 72% 58%;      /* 重要且紧急 - 红色系（Logo 用） */
+    --quadrant-logo-q2: 38 92% 50%;     /* 重要不紧急 - 橙色系（Logo 用） */
+    --quadrant-logo-q3: 217 91% 60%;    /* 不重要但紧急 - 蓝色系（Logo 用） */
+    --quadrant-logo-q4: 158 64% 52%;    /* 不重要不紧急 - 绿色系（Logo 用） */
   }
 
   .dark {
@@ -72,6 +78,12 @@
     --quadrant-q2: 25 50% 15%;          /* 重要不紧急 - 橙色系 */
     --quadrant-q3: 210 50% 15%;         /* 不重要但紧急 - 蓝色系 */
     --quadrant-q4: 142 40% 15%;         /* 不重要不紧急 - 绿色系 */
+
+    /* 四象限 Logo 颜色（暗色模式，与象限色相一致，但更饱和） */
+    --quadrant-logo-q1: 0 72% 58%;      /* 重要且紧急 - 红色系（Logo 用） */
+    --quadrant-logo-q2: 38 92% 50%;     /* 重要不紧急 - 橙色系（Logo 用） */
+    --quadrant-logo-q3: 217 91% 60%;    /* 不重要但紧急 - 蓝色系（Logo 用） */
+    --quadrant-logo-q4: 158 64% 52%;    /* 不重要不紧急 - 绿色系（Logo 用） */
   }
 }
 
@@ -97,6 +109,20 @@
   }
   .bg-quadrant-q4 {
     background-color: hsl(var(--quadrant-q4));
+  }
+
+  /* 四象限 Logo 颜色工具类（更饱和、更深） */
+  .bg-quadrant-logo-q1 {
+    background-color: hsl(var(--quadrant-logo-q1));
+  }
+  .bg-quadrant-logo-q2 {
+    background-color: hsl(var(--quadrant-logo-q2));
+  }
+  .bg-quadrant-logo-q3 {
+    background-color: hsl(var(--quadrant-logo-q3));
+  }
+  .bg-quadrant-logo-q4 {
+    background-color: hsl(var(--quadrant-logo-q4));
   }
 
   /* 侧边栏颜色工具类 */
