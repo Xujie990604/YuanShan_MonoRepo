@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AlertCircle, Pencil, Trash2, Smile } from 'lucide-react'
 import { EmojiPicker, EmojiPickerSearch, EmojiPickerContent } from '@/components/ui/emoji-picker'
 import { Button } from '@/components/ui/button'
@@ -125,6 +125,13 @@ export default function RoleManageDialog({ open, onOpenChange }: RoleManageDialo
     setEditingRoleId(null)
     setEmojiPickerOpen(false)
   }
+
+  // 当对话框关闭时，重置表单
+  useEffect(() => {
+    if (!open) {
+      resetForm()
+    }
+  }, [open])
 
   // 开始编辑角色
   const startEditRole = (role: Role) => {
