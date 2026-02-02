@@ -1,6 +1,8 @@
 import { FileText } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useRoles } from '@/hooks/use-roles'
 import type { Task } from '@yuan-shan/keydo-contract'
 
 /**
@@ -24,6 +26,9 @@ interface DraggedTaskPreviewProps {
  * - 显示详情图标（与 TaskCard 一致）
  */
 export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
+  const { data: roles = [] } = useRoles()
+  const role = task.roleId ? roles.find((r) => r.id === task.roleId) : null
+
   /**
    * 判断任务是否有详情
    */
@@ -55,6 +60,21 @@ export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
         >
           {task.title}
         </span>
+
+        {/* 角色标签（任何视图下都显示） */}
+        {role && (
+          <Badge
+            variant="secondary"
+            className="text-xs px-1.5 py-0 shrink-0"
+            style={{
+              backgroundColor: `hsl(var(--role-${role.color}-bg))`,
+              color: `hsl(var(--role-${role.color}-text))`,
+            }}
+          >
+            <span className="mr-0.5">{role.icon}</span>
+            <span>{role.name}</span>
+          </Badge>
+        )}
 
         {/* 详情图标（有详情时显示） */}
         {hasDescription && (

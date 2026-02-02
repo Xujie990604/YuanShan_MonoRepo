@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import ColorfulLogo from '@/components/ColorfulLogo'
+import RoleList from './RoleList'
 import { useAuthStore } from '@/store/auth'
 
 /**
@@ -52,7 +53,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-40 h-screen flex flex-col bg-sidebar border-r border-sidebar-border">
+    <aside className="w-60 h-screen flex flex-col bg-sidebar border-r border-sidebar-border">
       {/* Logo 区域 */}
       <div className="p-4">
         <div className="flex items-center gap-3">
@@ -60,11 +61,11 @@ export default function Sidebar() {
           <ColorfulLogo size="md" />
           {/* 应用名称和标语 */}
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-sidebar-foreground leading-tight mb-1">
+            <h1 className="text-lg font-semibold text-sidebar-foreground leading-tight">
               KeyDo
             </h1>
             <p className="text-xs text-muted-foreground">
-              要事优先
+              四象限任务管理
             </p>
           </div>
         </div>
@@ -72,30 +73,30 @@ export default function Sidebar() {
 
       <Separator />
 
-      {/* 中间空白区域（未来可添加导航菜单） */}
-      <div className="flex-1 p-3">
-        {/* 预留：未来可以添加导航菜单项 */}
+      {/* 角色列表区域 */}
+      <div className="flex-1 px-2 py-3 overflow-y-auto custom-scrollbar">
+        <RoleList />
       </div>
 
       <Separator />
 
       {/* 底部操作区域 */}
-      <div className="p-3 space-y-2">
+      <div className="p-3 space-y-1">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-10"
           onClick={handleSettings}
         >
           <Settings className="w-4 h-4" />
-          <span>设置</span>
+          <span>Settings</span>
         </Button>
         <Button
           variant="ghost"
-          className="w-full justify-start gap-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground h-10"
           onClick={() => setShowLogoutDialog(true)}
         >
           <LogOut className="w-4 h-4" />
-          <span>退出登录</span>
+          <span>Logout</span>
         </Button>
       </div>
 

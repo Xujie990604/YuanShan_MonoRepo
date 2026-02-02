@@ -10,6 +10,7 @@ import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
 import { queryKeys } from '@/hooks/query-keys'
+import { useRoleStore } from '@/store/role'
 
 /**
  * 四象限任务管理容器组件
@@ -30,6 +31,22 @@ export default function QuadrantContainer() {
   const updateTaskMutation = useUpdateTask()
   const deleteTaskMutation = useDeleteTask()
   const queryClient = useQueryClient()
+
+  // ========== 角色聚焦状态 ==========
+  
+  const { focusedRoleId } = useRoleStore()
+
+  // ========== 任务过滤（根据聚焦角色） ==========
+  
+  /**
+   * 根据聚焦角色过滤任务
+   * - 如果没有聚焦角色，显示所有任务
+   * - 如果有聚焦角色，只显示该角色的任务
+   */
+  const filteredTasks = useMemo(() => {
+    if (!focusedRoleId) return tasks // 全部任务
+    return tasks.filter((task) => task.roleId === focusedRoleId)
+  }, [tasks, focusedRoleId])
 
   // ========== 拖拽传感器配置（区分点击和拖动） ==========
   
@@ -130,10 +147,11 @@ export default function QuadrantContainer() {
   /**
    * 添加新任务（order 由服务端计算）
    */
-  const handleAddTask = (quadrant: QuadrantType, data: { title: string; description?: string }) => {
+  const handleAddTask = (quadrant: QuadrantType, data: { title: string; description?: string; roleId?: string }) => {
     createTaskMutation.mutate({ 
       title: data.title, 
       description: data.description,
+      roleId: data.roleId,
       quadrant 
     })
   }
@@ -149,18 +167,19 @@ export default function QuadrantContainer() {
   /**
    * 编辑任务确认回调
    */
-  const handleEditConfirm = (data: { title: string; description?: string }) => {
+  const handleEditConfirm = (data: { title: string; description?: string; roleId?: string }) => {
     if (!editingTask) return
     
     // 保存原始值用于回滚
     const originalTitle = editingTask.title
     const originalDescription = editingTask.description
+    const originalRoleId = editingTask.roleId
 
     // 乐观更新
     queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
       return oldTasks.map((t) =>
         t.id === editingTask.id 
-          ? { ...t, title: data.title, description: data.description } 
+          ? { ...t, title: data.title, description: data.description, roleId: data.roleId } 
           : t
       )
     })
@@ -172,6 +191,7 @@ export default function QuadrantContainer() {
         data: { 
           title: data.title,
           description: data.description,
+          roleId: data.roleId,
         } 
       },
       {
@@ -180,7 +200,7 @@ export default function QuadrantContainer() {
           queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
             return oldTasks.map((t) =>
               t.id === editingTask.id 
-                ? { ...t, title: originalTitle, description: originalDescription } 
+                ? { ...t, title: originalTitle, description: originalDescription, roleId: originalRoleId } 
                 : t
             )
           })
@@ -406,6 +426,11 @@ export default function QuadrantContainer() {
   const tasksByQuadrant = useMemo(() => {
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
     
+    // 先根据聚焦角色过滤任务
+    const filtered = focusedRoleId 
+      ? currentTasks.filter((task) => task.roleId === focusedRoleId)
+      : currentTasks
+    
     const result: Record<QuadrantType, Task[]> = {
       Q1: [],
       Q2: [],
@@ -413,12 +438,12 @@ export default function QuadrantContainer() {
       Q4: [],
     }
     
-    for (const task of currentTasks) {
+    for (const task of filtered) {
       result[task.quadrant].push(task)
     }
     
     return result
-  }, [tasks, queryClient])
+  }, [tasks, queryClient, focusedRoleId])
 
   // ========== 加载和错误状态 ==========
   

@@ -13,5 +13,10 @@ export const queryKeys = {
     all: () => ['tasks'] as const,
     list: () => ['tasks', 'list'] as const,
   },
+  // 角色相关
+  roles: {
+    all: () => ['roles'] as const,
+    list: () => ['roles', 'list'] as const,
+  },
 } as const
 

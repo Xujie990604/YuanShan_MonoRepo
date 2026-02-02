@@ -20,14 +20,30 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useRoles } from '@/hooks/use-roles'
+import { useRoleStore } from '@/store/role'
 import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+
+/**
+ * 特殊常量：表示"无角色"的值
+ * 使用特殊字符串而不是空字符串，因为 SelectItem 不能使用空字符串作为 value
+ */
+const NO_ROLE_VALUE = '__none__'
 
 /**
  * Zod 表单验证规则
  * 
  * - title: 任务标题（必填，最多 64 个字符）
  * - description: 任务详情（可选，最多 1000 个字符）
+ * - roleId: 关联的角色 ID（可选）
  */
 const taskFormSchema = z.object({
   title: z.string()
@@ -36,6 +52,7 @@ const taskFormSchema = z.object({
   description: z.string()
     .max(1000, '任务详情不能超过 1000 个字符')
     .optional(),
+  roleId: z.string().optional(),
 })
 
 /**
@@ -52,7 +69,7 @@ interface TaskFormDialogProps {
   task?: Task | null // 编辑时传入任务数据，添加时为 undefined
   quadrant?: QuadrantType // 添加时传入象限，编辑时从 task 中获取
   onOpenChange: (open: boolean) => void
-  onConfirm: (data: { title: string; description?: string }) => void
+  onConfirm: (data: { title: string; description?: string; roleId?: string }) => void
 }
 
 /**
@@ -89,6 +106,10 @@ export default function TaskFormDialog({
   onOpenChange,
   onConfirm,
 }: TaskFormDialogProps) {
+  // 获取角色列表和聚焦状态
+  const { data: roles = [] } = useRoles()
+  const { focusedRoleId } = useRoleStore()
+
   /**
    * useForm Hook：管理表单状态和验证
    */
@@ -97,11 +118,13 @@ export default function TaskFormDialog({
     defaultValues: {
       title: '',
       description: '',
+      roleId: NO_ROLE_VALUE,
     },
   })
 
   /**
    * 当对话框打开或任务数据变化时，更新表单默认值
+   * 智能默认值：如果正在聚焦某个角色，新建任务时自动选中该角色
    */
   useEffect(() => {
     if (open) {
@@ -110,16 +133,19 @@ export default function TaskFormDialog({
         form.reset({
           title: task.title,
           description: task.description || '',
+          roleId: task.roleId || '',
         })
       } else {
-        // 添加模式：重置为空
+        // 添加模式：智能默认值
+        // 如果正在聚焦某个角色，自动选中该角色；否则为空
         form.reset({
           title: '',
           description: '',
+          roleId: focusedRoleId || '',
         })
       }
     }
-  }, [open, mode, task, form])
+  }, [open, mode, task, focusedRoleId, form])
 
   /**
    * 表单提交处理
@@ -132,6 +158,7 @@ export default function TaskFormDialog({
     onConfirm({
       title: data.title.trim(),
       description: trimmedDescription === '' ? '' : (trimmedDescription || undefined), // 空字符串传递空字符串
+      roleId: data.roleId || undefined, // 空字符串转为 undefined
     })
     form.reset() // 重置表单
     onOpenChange(false) // 关闭对话框
@@ -240,6 +267,42 @@ export default function TaskFormDialog({
                         value={field.value || ''} // 确保 value 不为 undefined
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* 所属角色 */}
+              <FormField
+                control={form.control}
+                name="roleId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>所属角色（可选）</FormLabel>
+                    <Select
+                      value={field.value || '__none__'}
+                      onValueChange={(value) => {
+                        // 特殊值 __none__ 转换为空字符串
+                        field.onChange(value === '__none__' ? '' : value)
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择角色（可留空）" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="__none__">无角色（未分类）</SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            <span className="flex items-center gap-2">
+                              <span>{role.icon}</span>
+                              <span>{role.name}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

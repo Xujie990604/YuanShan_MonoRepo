@@ -16,6 +16,7 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   tasks     Task[]
+  roles     Role[]
 
   @@map("users")
 }
@@ -28,12 +29,32 @@ model Task {
   quadrant    String   @db.VarChar(2) // Q1, Q2, Q3, Q4
   completed   Boolean  @default(false)
   order       String   @db.VarChar(255) // lexorank 排序值
+  roleId      String?  @map("role_id") // 关联的角色 ID，可为 NULL（未分类任务）
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
 
   @@index([userId, quadrant])
   @@index([userId, order])
+  @@index([userId, roleId])
   @@map("tasks")
+}
+
+model Role {
+  id        String   @id @default(uuid())
+  userId    Int      @map("user_id")
+  name      String   @db.VarChar(50) // 角色名称，最多 50 字符
+  icon      String   @db.VarChar(10) // Emoji 图标，最多 10 字符
+  color     String   @db.VarChar(20) // 主题色标识符（如 "blue", "orange"）
+  manifesto String   @db.VarChar(200) // 角色宣言，最多 200 字符
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@index([userId])
+  @@map("roles")
 }

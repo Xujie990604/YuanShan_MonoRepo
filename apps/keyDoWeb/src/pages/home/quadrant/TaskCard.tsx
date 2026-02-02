@@ -2,7 +2,9 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { FileText } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
 import TaskContextMenu from './TaskContextMenu'
+import { useRoles } from '@/hooks/use-roles'
 import type { Task } from '@yuan-shan/keydo-contract'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +29,9 @@ interface TaskCardProps {
  * 5. 有详情的任务显示图标区分
  */
 export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete, onEdit }: TaskCardProps) {
+  const { data: roles = [] } = useRoles()
+  const role = task.roleId ? roles.find((r) => r.id === task.roleId) : null
+
   /**
    * useSortable Hook：使元素可拖拽
    * 
@@ -120,6 +125,21 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
           >
             {task.title}
           </span>
+
+          {/* 角色标签（任何视图下都显示） */}
+          {role && (
+            <Badge
+              variant="secondary"
+              className="text-xs px-1.5 py-0 shrink-0"
+              style={{
+                backgroundColor: `hsl(var(--role-${role.color}-bg))`,
+                color: `hsl(var(--role-${role.color}-text))`,
+              }}
+            >
+              <span className="mr-0.5">{role.icon}</span>
+              <span>{role.name}</span>
+            </Badge>
+          )}
           
           {/* 详情图标（有详情时显示） */}
           {hasDescription && (
