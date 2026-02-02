@@ -37,7 +37,6 @@ export default function RoleList() {
       {/* 分组标题 */}
       <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
         <Users className="w-4 h-4" />
-        <span className="font-medium">My Roles</span>
         <span className="text-xs">人生角色</span>
       </div>
 
@@ -78,7 +77,7 @@ export default function RoleList() {
         onClick={() => setManageDialogOpen(true)}
       >
         <Settings2 className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-left">Manage Roles</span>
+        <span className="flex-1 text-left">管理角色</span>
         <span className="text-xs">{roles.length}/5</span>
       </button>
 
