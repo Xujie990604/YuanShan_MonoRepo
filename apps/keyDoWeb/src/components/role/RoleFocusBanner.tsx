@@ -32,27 +32,26 @@ export default function RoleFocusBanner() {
       {/* 左侧图标：与整块文字垂直居中 */}
       <span className="text-3xl flex-shrink-0 leading-none">{role.icon}</span>
 
-      {/* 中间：名称 + 宣言 */}
+      {/* 中间：名称 + 关闭按钮（同一行）、宣言 */}
       <div className="flex-1 min-w-0">
-        <div
-          className="text-base font-medium"
-          style={{ color: `hsl(var(--role-${role.color}-text))` }}
-        >
-          {role.name}
+        <div className="flex items-center gap-2">
+          <span
+            className="text-base font-medium"
+            style={{ color: `hsl(var(--role-${role.color}-text))` }}
+          >
+            {role.name}
+          </span>
+          <button
+            onClick={() => clearFocus()}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors p-0.5 -m-0.5"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-        <span className="text-purple-400/70">“</span>
-        <span className="mx-1">{role.manifesto}</span>
-        <span className="text-purple-400/70">”</span>
+          <span className="italic">{role.manifesto}</span>
         </p>
       </div>
-
-      <button
-        onClick={() => clearFocus()}
-        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <X className="w-5 h-5" />
-      </button>
     </div>
   )
 }

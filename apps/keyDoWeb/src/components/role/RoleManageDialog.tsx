@@ -225,14 +225,10 @@ export default function RoleManageDialog({ open, onOpenChange }: RoleManageDialo
         <DialogContent className="sm:max-w-lg max-h-[90vh] flex flex-col p-0 overflow-hidden">
           {/* 固定表头：不随内容滚动 */}
           <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-2 pr-10">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 pr-2">
-                <DialogTitle>管理角色</DialogTitle>
-                <DialogDescription>
-                  定义你的人生角色,保持专注于最重要的领域 · {roles.length}/{MAX_ROLES}
-                </DialogDescription>
-              </div>
-            </div>
+            <DialogTitle>管理角色</DialogTitle>
+            <DialogDescription>
+              定义你的人生角色,保持专注于最重要的领域
+            </DialogDescription>
           </DialogHeader>
 
           {/* 可滚动区域：仅此处有垂直滚动条，禁止水平滚动 */}
@@ -240,9 +236,14 @@ export default function RoleManageDialog({ open, onOpenChange }: RoleManageDialo
             <div className="space-y-4 min-w-0">
               {/* 现有角色列表（最多 5 个，不加列表内滚动） */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground uppercase tracking-wide">
-                  我的角色
-                </Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                    我的角色
+                  </Label>
+                  <span className="flex-shrink-0 rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+                    {roles.length}/{MAX_ROLES}
+                  </span>
+                </div>
                 <div className="space-y-1">
                   {roles.map((role) => (
                     <div
