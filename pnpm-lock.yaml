@@ -260,9 +260,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      emoji-picker-react:
-        specifier: ^4.17.3
-        version: 4.17.3(react@18.3.1)
+      frimousse:
+        specifier: ^0.3.0
+        version: 0.3.0(react@18.3.1)(typescript@5.8.3)
       lexorank:
         specifier: ^1.0.5
         version: 1.0.5
@@ -6011,12 +6011,6 @@ packages:
     resolution: {integrity: sha512-DeWwawk6r5yR9jFgnDKYt4sLS0LmHJJi3ZOnb5/JdbYwj3nW+FxQnHIjhBKz8YLC7oRNPVM9NQ47I3CVx34eqQ==}
     engines: {node: '>=12'}
 
-  emoji-picker-react@4.17.3:
-    resolution: {integrity: sha512-qeKBtdtTwI11DMP5FwVoNeZC5bPvQPTU3UVbA5BkYOdy03HNLX2OpaZ4Q4fthLaSsmjDs17c8uTC2AIEu2PCoA==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      react: ^18.3.1
-
   emoji-regex@7.0.3:
     resolution: {integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==}
 
@@ -6544,9 +6538,6 @@ packages:
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
 
-  flairup@1.0.0:
-    resolution: {integrity: sha512-IKlE+pNvL2R+kVL1kEhUYqRxVqeFnjiIvHWDMLFXNaqyUdFXQM2wte44EfMYJNHkW16X991t2Zg8apKkhv7OBA==}
-
   flat-cache@2.0.1:
     resolution: {integrity: sha512-LoQe6yDuUMDzQAEH8sgmh4Md6oZnc/7PjtwjNFSzveXqSHt6ka9fPBuso7IGf9Rz4uqnSnWiFH2B/zj24a5ReA==}
     engines: {node: '>=4'}
@@ -6643,6 +6634,15 @@ packages:
   fresh@2.0.0:
     resolution: {integrity: sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A==}
     engines: {node: '>= 0.8'}
+
+  frimousse@0.3.0:
+    resolution: {integrity: sha512-kO6LMoKY/cLAYEhXXtqLRaLIE6L/DagpFPrUZaLv3LsUa1/8Iza3HhwZcgN8eZ+weXnhv69eoclNUPohcCa/IQ==}
+    peerDependencies:
+      react: ^18.3.1
+      typescript: '>=5.1.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   from2@2.3.0:
     resolution: {integrity: sha512-OMcX/4IC/uqEPVgGeyfN22LJk6AZrMkRZHxcHBMBvHScDGgwTm2GT2Wkgtocyd3JfZffjj2kYUDXXII0Fk9W0g==}
@@ -17952,11 +17952,6 @@ snapshots:
 
   emittery@0.13.1: {}
 
-  emoji-picker-react@4.17.3(react@18.3.1):
-    dependencies:
-      flairup: 1.0.0
-      react: 18.3.1
-
   emoji-regex@7.0.3: {}
 
   emoji-regex@8.0.0: {}
@@ -18814,8 +18809,6 @@ snapshots:
       mlly: 1.8.0
       rollup: 4.55.1
 
-  flairup@1.0.0: {}
-
   flat-cache@2.0.1:
     dependencies:
       flatted: 2.0.2
@@ -18928,6 +18921,12 @@ snapshots:
   fresh@0.5.2: {}
 
   fresh@2.0.0: {}
+
+  frimousse@0.3.0(react@18.3.1)(typescript@5.8.3):
+    dependencies:
+      react: 18.3.1
+    optionalDependencies:
+      typescript: 5.8.3
 
   from2@2.3.0:
     dependencies:

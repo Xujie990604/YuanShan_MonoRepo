@@ -33,7 +33,7 @@
     "@yuan-shan/tools": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "emoji-picker-react": "^4.17.3",
+    "frimousse": "^0.3.0",
     "lexorank": "^1.0.5",
     "lucide-react": "^0.263.1",
     "react-hook-form": "^7.69.0",

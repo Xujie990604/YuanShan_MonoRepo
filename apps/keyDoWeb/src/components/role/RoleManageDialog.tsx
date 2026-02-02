@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AlertCircle, Pencil, Trash2, Smile } from 'lucide-react'
-import EmojiPicker from 'emoji-picker-react'
+import { EmojiPicker, EmojiPickerSearch, EmojiPickerContent } from '@/components/ui/emoji-picker'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -138,8 +138,8 @@ export default function RoleManageDialog({ open, onOpenChange }: RoleManageDialo
   }
 
   // 选择 Emoji
-  const handleEmojiClick = (emojiData: any) => {
-    setFormData({ ...formData, emoji: emojiData.emoji })
+  const handleEmojiSelect = (data: { emoji: string }) => {
+    setFormData({ ...formData, emoji: data.emoji })
     setEmojiPickerOpen(false)
   }
 
@@ -340,12 +340,12 @@ export default function RoleManageDialog({ open, onOpenChange }: RoleManageDialo
                         </PopoverTrigger>
                         <PopoverContent className="w-full p-0" align="start">
                           <EmojiPicker
-                            onEmojiClick={handleEmojiClick}
-                            width="100%"
-                            height={350}
-                            searchPlaceHolder="搜索表情..."
-                            previewConfig={{ showPreview: false }}
-                          />
+                            className="h-[350px] w-full"
+                            onEmojiSelect={handleEmojiSelect}
+                          >
+                            <EmojiPickerSearch placeholder="搜索表情..." />
+                            <EmojiPickerContent />
+                          </EmojiPicker>
                         </PopoverContent>
                       </Popover>
                       <p className="text-xs text-muted-foreground">点击按钮选择</p>
