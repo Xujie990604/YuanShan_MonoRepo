@@ -15,6 +15,7 @@ export interface Task {
   quadrant: QuadrantType;
   completed: boolean;
   order: string; // lexorank 排序值（字符串）
+  roleId?: string; // 关联的角色 ID（可选）
   createdAt: string; // ISO 8601 格式
   updatedAt: string; // ISO 8601 格式
 }
@@ -33,6 +34,7 @@ export const createTaskSchema = z.object({
     errorMap: () => ({ message: '象限类型必须是 Q1、Q2、Q3 或 Q4' }),
   }),
   order: z.string().optional(), // 可选，不提供则由服务端计算 lexorank
+  roleId: z.string().uuid().optional(), // 关联的角色 ID（可选）
 });
 
 /**
@@ -56,6 +58,7 @@ export const updateTaskSchema = z.object({
   }).optional(),
   completed: z.boolean().optional(),
   order: z.string().optional(), // 用于象限内排序
+  roleId: z.string().uuid().nullable().optional(), // 关联的角色 ID（可选，支持设为 null）
 });
 
 /**

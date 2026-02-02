@@ -16,7 +16,6 @@
     "react-dom": "^18.3.1",
     "@tanstack/react-query": "^5.90.12",
     "@yuan-shan/tools": "workspace:*",
-    "@yuan-shan/ui": "workspace:*",
     "axios": "^1.10.0",
     "dayjs": "1.11.13",
     "react-router-dom": "^7.10.1",

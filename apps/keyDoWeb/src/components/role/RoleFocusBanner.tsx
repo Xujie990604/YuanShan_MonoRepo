@@ -1,0 +1,58 @@
+import { X } from 'lucide-react'
+import { useRoles } from '@/hooks/use-roles'
+import { useRoleStore } from '@/store/role'
+
+/**
+ * 角色聚焦 Banner 组件 (仅查看,不支持编辑)
+ * 
+ * 设计参考 v0 Task Management Dashboard:
+ * - 淡色背景 (根据角色主题色)
+ * - 左侧: 大号 Emoji 图标
+ * - 中间: 角色名称
+ * - 右侧: × 关闭按钮
+ * - 下方: 引号包裹的宣言
+ */
+export default function RoleFocusBanner() {
+  const { focusedRoleId, clearFocus } = useRoleStore()
+  const { data: roles = [] } = useRoles()
+
+  // 获取当前聚焦的角色
+  const role = roles.find((r) => r.id === focusedRoleId)
+
+  // 如果没有聚焦角色,不显示
+  if (!role) return null
+
+  return (
+    <div
+      className="mx-4 mt-4 mb-2 px-6 py-4 rounded-xl flex items-center gap-3"
+      style={{
+        backgroundColor: `hsl(var(--role-${role.color}-bg))`,
+      }}
+    >
+      {/* 左侧图标：与整块文字垂直居中 */}
+      <span className="text-3xl flex-shrink-0 leading-none">{role.icon}</span>
+
+      {/* 中间：名称 + 宣言 */}
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-base font-medium"
+          style={{ color: `hsl(var(--role-${role.color}-text))` }}
+        >
+          {role.name}
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+        <span className="text-purple-400/70">“</span>
+        <span className="mx-1">{role.manifesto}</span>
+        <span className="text-purple-400/70">”</span>
+        </p>
+      </div>
+
+      <button
+        onClick={() => clearFocus()}
+        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+  )
+}

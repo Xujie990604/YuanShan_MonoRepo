@@ -43,6 +43,26 @@
     --quadrant-logo-q2: 38 92% 50%;     /* 重要不紧急 - 橙色系（Logo 用） */
     --quadrant-logo-q3: 217 91% 60%;    /* 不重要但紧急 - 蓝色系（Logo 用） */
     --quadrant-logo-q4: 158 64% 52%;    /* 不重要不紧急 - 绿色系（Logo 用） */
+
+    /* 角色主题色 - 背景色（浅色模式） */
+    --role-blue-bg: 221 83% 97%;
+    --role-green-bg: 142 76% 96%;
+    --role-orange-bg: 24 95% 96%;
+    --role-purple-bg: 262 83% 97%;
+    --role-red-bg: 0 84% 97%;
+    --role-yellow-bg: 48 96% 95%;
+    --role-pink-bg: 330 81% 97%;
+    --role-gray-bg: 220 13% 95%;
+
+    /* 角色主题色 - 文字色（浅色模式） */
+    --role-blue-text: 221 83% 53%;
+    --role-green-text: 142 76% 36%;
+    --role-orange-text: 24 95% 53%;
+    --role-purple-text: 262 83% 58%;
+    --role-red-text: 0 84% 60%;
+    --role-yellow-text: 48 96% 53%;
+    --role-pink-text: 330 81% 60%;
+    --role-gray-text: 220 13% 46%;
   }
 
   .dark {
@@ -84,6 +104,26 @@
     --quadrant-logo-q2: 38 92% 50%;     /* 重要不紧急 - 橙色系（Logo 用） */
     --quadrant-logo-q3: 217 91% 60%;    /* 不重要但紧急 - 蓝色系（Logo 用） */
     --quadrant-logo-q4: 158 64% 52%;    /* 不重要不紧急 - 绿色系（Logo 用） */
+
+    /* 角色主题色 - 背景色（深色模式） */
+    --role-blue-bg: 221 83% 10%;
+    --role-green-bg: 142 76% 10%;
+    --role-orange-bg: 24 95% 10%;
+    --role-purple-bg: 262 83% 10%;
+    --role-red-bg: 0 84% 10%;
+    --role-yellow-bg: 48 96% 12%;
+    --role-pink-bg: 330 81% 10%;
+    --role-gray-bg: 220 13% 15%;
+
+    /* 角色主题色 - 文字色（深色模式） */
+    --role-blue-text: 221 83% 73%;
+    --role-green-text: 142 76% 66%;
+    --role-orange-text: 24 95% 73%;
+    --role-purple-text: 262 83% 78%;
+    --role-red-text: 0 84% 70%;
+    --role-yellow-text: 48 96% 73%;
+    --role-pink-text: 330 81% 70%;
+    --role-gray-text: 220 13% 66%;
   }
 }
 
