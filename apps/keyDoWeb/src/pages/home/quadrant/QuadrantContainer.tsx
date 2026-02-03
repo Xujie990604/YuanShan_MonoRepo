@@ -6,7 +6,7 @@ import { getRankBetween } from '@yuan-shan/tools'
 import Quadrant from './Quadrant'
 import DraggedTaskPreview from './DraggedTaskPreview'
 import TaskFormDialog from './TaskFormDialog'
-import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+import type { Task, QuadrantType, RecurrenceRule } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
 import { queryKeys } from '@/hooks/query-keys'
@@ -43,6 +43,7 @@ export default function QuadrantContainer() {
    * - 如果没有聚焦角色，显示所有任务
    * - 如果有聚焦角色，只显示该角色的任务
    */
+  // @ts-ignore - TODO: 实现角色过滤功能
   const filteredTasks = useMemo(() => {
     if (!focusedRoleId) return tasks // 全部任务
     return tasks.filter((task) => task.roleId === focusedRoleId)
@@ -147,12 +148,25 @@ export default function QuadrantContainer() {
   /**
    * 添加新任务（order 由服务端计算）
    */
-  const handleAddTask = (quadrant: QuadrantType, data: { title: string; description?: string; roleId?: string }) => {
-    createTaskMutation.mutate({ 
-      title: data.title, 
+  const handleAddTask = (
+    quadrant: QuadrantType,
+    data: {
+      title: string
+      description?: string
+      roleId?: string
+      dueDate?: string
+      isAllDay?: boolean
+      recurrence?: RecurrenceRule
+    }
+  ) => {
+    createTaskMutation.mutate({
+      title: data.title,
       description: data.description,
       roleId: data.roleId,
-      quadrant 
+      dueDate: data.dueDate,
+      isAllDay: data.isAllDay,
+      recurrence: data.recurrence,
+      quadrant,
     })
   }
 
@@ -167,40 +181,69 @@ export default function QuadrantContainer() {
   /**
    * 编辑任务确认回调
    */
-  const handleEditConfirm = (data: { title: string; description?: string; roleId?: string }) => {
+  const handleEditConfirm = (data: {
+    title: string
+    description?: string
+    roleId?: string
+    dueDate?: string
+    isAllDay?: boolean
+    recurrence?: RecurrenceRule
+  }) => {
     if (!editingTask) return
-    
+
     // 保存原始值用于回滚
     const originalTitle = editingTask.title
     const originalDescription = editingTask.description
     const originalRoleId = editingTask.roleId
+    const originalDueDate = editingTask.dueDate
+    const originalIsAllDay = editingTask.isAllDay
+    const originalRecurrence = editingTask.recurrence
 
     // 乐观更新
     queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
       return oldTasks.map((t) =>
-        t.id === editingTask.id 
-          ? { ...t, title: data.title, description: data.description, roleId: data.roleId } 
+        t.id === editingTask.id
+          ? {
+              ...t,
+              title: data.title,
+              description: data.description,
+              roleId: data.roleId,
+              dueDate: data.dueDate,
+              isAllDay: data.isAllDay,
+              recurrence: data.recurrence,
+            }
           : t
       )
     })
 
     // API 请求
     updateTaskMutation.mutate(
-      { 
-        id: editingTask.id, 
-        data: { 
+      {
+        id: editingTask.id,
+        data: {
           title: data.title,
           description: data.description,
           roleId: data.roleId,
-        } 
+          dueDate: data.dueDate,
+          isAllDay: data.isAllDay,
+          recurrence: data.recurrence,
+        },
       },
       {
         onError: () => {
           // 回滚
           queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
             return oldTasks.map((t) =>
-              t.id === editingTask.id 
-                ? { ...t, title: originalTitle, description: originalDescription, roleId: originalRoleId } 
+              t.id === editingTask.id
+                ? {
+                    ...t,
+                    title: originalTitle,
+                    description: originalDescription,
+                    roleId: originalRoleId,
+                    dueDate: originalDueDate,
+                    isAllDay: originalIsAllDay,
+                    recurrence: originalRecurrence,
+                  }
                 : t
             )
           })

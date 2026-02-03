@@ -3,7 +3,6 @@ import { Users, Settings2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { useRoles } from '@/hooks/use-roles'
-import { useTasks } from '@/hooks/use-tasks'
 import { useRoleStore } from '@/store/role'
 import RoleManageDialog from '@/components/role/RoleManageDialog'
 
@@ -18,7 +17,6 @@ import RoleManageDialog from '@/components/role/RoleManageDialog'
  */
 export default function RoleList() {
   const { data: roles = [], isLoading } = useRoles()
-  const { data: tasks = [] } = useTasks()
   const { focusedRoleId, setFocusedRole, clearFocus } = useRoleStore()
   const [manageDialogOpen, setManageDialogOpen] = useState(false)
 

@@ -61,4 +61,12 @@ export class TaskController {
     await this.taskService.remove(id, req.user.userId);
     return { success: true };
   }
+
+  /**
+   * 完成任务（支持重复任务自动生成）
+   */
+  @Post(':id/complete')
+  async complete(@Param('id') id: string, @Req() req): Promise<Task> {
+    return this.taskService.complete(id, req.user.userId);
+  }
 }

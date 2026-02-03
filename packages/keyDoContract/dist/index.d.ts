@@ -63,6 +63,19 @@ type UserInfo = {
  */
 type QuadrantType = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 /**
+ * 重复规则类型
+ */
+type RecurrenceType = 'DAILY' | 'WEEKLY' | 'MONTHLY';
+/**
+ * 重复规则结构
+ */
+interface RecurrenceRule {
+    type: RecurrenceType;
+    interval: number;
+    daysOfWeek?: number[];
+    dayOfMonth?: number;
+}
+/**
  * 任务接口
  */
 interface Task {
@@ -73,6 +86,9 @@ interface Task {
     completed: boolean;
     order: string;
     roleId?: string;
+    dueDate?: string;
+    isAllDay?: boolean;
+    recurrence?: RecurrenceRule;
     createdAt: string;
     updatedAt: string;
 }
@@ -85,18 +101,52 @@ declare const createTaskSchema: z.ZodObject<{
     quadrant: z.ZodEnum<["Q1", "Q2", "Q3", "Q4"]>;
     order: z.ZodOptional<z.ZodString>;
     roleId: z.ZodOptional<z.ZodString>;
+    dueDate: z.ZodOptional<z.ZodString>;
+    isAllDay: z.ZodOptional<z.ZodBoolean>;
+    recurrence: z.ZodOptional<z.ZodObject<{
+        type: z.ZodEnum<["DAILY", "WEEKLY", "MONTHLY"]>;
+        interval: z.ZodDefault<z.ZodNumber>;
+        daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+        dayOfMonth: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval: number;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    }, {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval?: number | undefined;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    }>>;
 }, "strip", z.ZodTypeAny, {
     title: string;
     quadrant: "Q1" | "Q2" | "Q3" | "Q4";
     description?: string | undefined;
     order?: string | undefined;
     roleId?: string | undefined;
+    dueDate?: string | undefined;
+    isAllDay?: boolean | undefined;
+    recurrence?: {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval: number;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    } | undefined;
 }, {
     title: string;
     quadrant: "Q1" | "Q2" | "Q3" | "Q4";
     description?: string | undefined;
     order?: string | undefined;
     roleId?: string | undefined;
+    dueDate?: string | undefined;
+    isAllDay?: boolean | undefined;
+    recurrence?: {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval?: number | undefined;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    } | undefined;
 }>;
 /**
  * 创建任务请求参数类型
@@ -112,12 +162,38 @@ declare const updateTaskSchema: z.ZodObject<{
     completed: z.ZodOptional<z.ZodBoolean>;
     order: z.ZodOptional<z.ZodString>;
     roleId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    dueDate: z.ZodOptional<z.ZodString>;
+    isAllDay: z.ZodOptional<z.ZodBoolean>;
+    recurrence: z.ZodOptional<z.ZodNullable<z.ZodObject<{
+        type: z.ZodEnum<["DAILY", "WEEKLY", "MONTHLY"]>;
+        interval: z.ZodDefault<z.ZodNumber>;
+        daysOfWeek: z.ZodOptional<z.ZodArray<z.ZodNumber, "many">>;
+        dayOfMonth: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval: number;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    }, {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval?: number | undefined;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    }>>>;
 }, "strip", z.ZodTypeAny, {
     title?: string | undefined;
     description?: string | undefined;
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;
+    dueDate?: string | undefined;
+    isAllDay?: boolean | undefined;
+    recurrence?: {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval: number;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    } | null | undefined;
     completed?: boolean | undefined;
 }, {
     title?: string | undefined;
@@ -125,6 +201,14 @@ declare const updateTaskSchema: z.ZodObject<{
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;
+    dueDate?: string | undefined;
+    isAllDay?: boolean | undefined;
+    recurrence?: {
+        type: "DAILY" | "WEEKLY" | "MONTHLY";
+        interval?: number | undefined;
+        daysOfWeek?: number[] | undefined;
+        dayOfMonth?: number | undefined;
+    } | null | undefined;
     completed?: boolean | undefined;
 }>;
 /**
@@ -183,4 +267,4 @@ interface RoleStats {
     completedCount: number;
 }
 
-export { type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type Role, type RoleColor, type RoleStats, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
+export { type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type RecurrenceRule, type RecurrenceType, type Role, type RoleColor, type RoleStats, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };

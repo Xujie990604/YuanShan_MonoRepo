@@ -1,8 +1,10 @@
-import { FileText } from 'lucide-react'
+import { FileText, Calendar, Repeat } from 'lucide-react'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { useRoles } from '@/hooks/use-roles'
+import { formatTaskDate, formatRecurrence, isOverdue } from '@/utils/dateUtils'
+import { isToday } from 'date-fns'
 import type { Task } from '@yuan-shan/keydo-contract'
 
 /**
@@ -34,6 +36,12 @@ export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
    */
   const hasDescription = !!task.description && task.description.trim() !== ''
 
+  /**
+   * 判断任务是否逾期和是否是今天
+   */
+  const isTaskOverdue = task.dueDate && !task.completed ? isOverdue(task.dueDate) : false
+  const isTaskToday = task.dueDate ? isToday(new Date(task.dueDate)) : false
+
   return (
     <div
       className={cn(
@@ -60,6 +68,37 @@ export default function DraggedTaskPreview({ task }: DraggedTaskPreviewProps) {
         >
           {task.title}
         </span>
+
+        {/* 日期徽章（单次任务） */}
+        {task.dueDate && !task.recurrence && (
+          <Badge
+            variant="outline"
+            className={cn(
+              'text-xs px-1.5 py-0 shrink-0 flex items-center gap-1',
+              isTaskOverdue && 'text-red-600 border-red-600',
+              isTaskToday && 'text-green-600 border-green-600'
+            )}
+          >
+            <Calendar className="h-3 w-3" />
+            <span>{formatTaskDate(task.dueDate, task.isAllDay ?? true)}</span>
+          </Badge>
+        )}
+
+        {/* 重复图标（重复任务） */}
+        {task.recurrence && (
+          <Badge
+            variant="outline"
+            className="text-xs px-1.5 py-0 shrink-0 flex items-center gap-1"
+          >
+            <Repeat className="h-3 w-3" />
+            <span>
+              {formatRecurrence(task.recurrence)}
+              {task.dueDate && !(task.isAllDay ?? true) && (
+                <> {new Date(task.dueDate).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</>
+              )}
+            </span>
+          </Badge>
+        )}
 
         {/* 角色标签（任何视图下都显示） */}
         {role && (

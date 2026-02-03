@@ -30,6 +30,12 @@ model Task {
   completed   Boolean  @default(false)
   order       String   @db.VarChar(255) // lexorank 排序值
   roleId      String?  @map("role_id") // 关联的角色 ID，可为 NULL（未分类任务）
+
+  // 日期相关字段
+  dueDate     DateTime? @map("due_date")         // 截止日期（可选）
+  isAllDay    Boolean   @default(true) @map("is_all_day")  // 是否全天任务（默认 true）
+  recurrence  String?   @db.Text @map("recurrence")  // 重复规则（JSON 格式，可选）
+
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -39,6 +45,7 @@ model Task {
   @@index([userId, quadrant])
   @@index([userId, order])
   @@index([userId, roleId])
+  @@index([userId, dueDate])  // 添加日期索引，优化按日期查询
   @@map("tasks")
 }
 

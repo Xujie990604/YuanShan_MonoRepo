@@ -18,8 +18,17 @@ var createTaskSchema = z.object({
   }),
   order: z.string().optional(),
   // 可选，不提供则由服务端计算 lexorank
-  roleId: z.string().uuid().optional()
+  roleId: z.string().uuid().optional(),
   // 关联的角色 ID（可选）
+  // 日期字段验证
+  dueDate: z.string().datetime({ offset: true }).optional(),
+  isAllDay: z.boolean().optional(),
+  recurrence: z.object({
+    type: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
+    interval: z.number().int().min(1).default(1),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
+    dayOfMonth: z.number().int().min(1).max(31).optional()
+  }).optional()
 });
 var updateTaskSchema = z.object({
   title: z.string().min(1, "\u4EFB\u52A1\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A").max(64, "\u4EFB\u52A1\u6807\u9898\u4E0D\u80FD\u8D85\u8FC7 64 \u4E2A\u5B57\u7B26").optional(),
@@ -31,8 +40,18 @@ var updateTaskSchema = z.object({
   completed: z.boolean().optional(),
   order: z.string().optional(),
   // 用于象限内排序
-  roleId: z.string().uuid().nullable().optional()
+  roleId: z.string().uuid().nullable().optional(),
   // 关联的角色 ID（可选，支持设为 null）
+  // 日期字段验证
+  dueDate: z.string().datetime({ offset: true }).optional(),
+  isAllDay: z.boolean().optional(),
+  recurrence: z.object({
+    type: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
+    interval: z.number().int().min(1).default(1),
+    daysOfWeek: z.array(z.number().int().min(0).max(6)).optional(),
+    dayOfMonth: z.number().int().min(1).max(31).optional()
+  }).nullable().optional()
+  // 支持设为 null 清除重复
 });
 var ROLE_COLORS = [
   "blue",
@@ -53,7 +72,7 @@ var ROLE_COLORS = [
   // 灰色系 - 沉稳/平衡
 ];
 var createRoleSchema = z.object({
-  name: z.string().min(1, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A").max(50, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u8D85\u8FC7 50 \u4E2A\u5B57\u7B26"),
+  name: z.string().min(1, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A").max(10, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u8D85\u8FC7 10 \u4E2A\u5B57\u7B26"),
   icon: z.string().min(1, "\u8BF7\u9009\u62E9\u89D2\u8272\u56FE\u6807").max(10, "\u56FE\u6807\u683C\u5F0F\u9519\u8BEF"),
   color: z.enum(ROLE_COLORS, {
     errorMap: () => ({ message: "\u8BF7\u9009\u62E9\u6709\u6548\u7684\u4E3B\u9898\u8272" })
@@ -61,7 +80,7 @@ var createRoleSchema = z.object({
   manifesto: z.string().min(10, "\u89D2\u8272\u5BA3\u8A00\u81F3\u5C11\u9700\u8981 10 \u4E2A\u5B57\u7B26").max(200, "\u89D2\u8272\u5BA3\u8A00\u4E0D\u80FD\u8D85\u8FC7 200 \u4E2A\u5B57\u7B26")
 });
 var updateRoleSchema = z.object({
-  name: z.string().min(1, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A").max(50, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u8D85\u8FC7 50 \u4E2A\u5B57\u7B26").optional(),
+  name: z.string().min(1, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u4E3A\u7A7A").max(10, "\u89D2\u8272\u540D\u79F0\u4E0D\u80FD\u8D85\u8FC7 10 \u4E2A\u5B57\u7B26").optional(),
   icon: z.string().min(1, "\u8BF7\u9009\u62E9\u89D2\u8272\u56FE\u6807").max(10, "\u56FE\u6807\u683C\u5F0F\u9519\u8BEF").optional(),
   color: z.enum(ROLE_COLORS, {
     errorMap: () => ({ message: "\u8BF7\u9009\u62E9\u6709\u6548\u7684\u4E3B\u9898\u8272" })

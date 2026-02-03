@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
@@ -30,7 +31,8 @@ import {
 import { cn } from '@/lib/utils'
 import { useRoles } from '@/hooks/use-roles'
 import { useRoleStore } from '@/store/role'
-import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+import { DateTimePicker } from '@/components/task/DateTimePicker'
+import type { Task, QuadrantType, RecurrenceRule } from '@yuan-shan/keydo-contract'
 
 /**
  * 特殊常量：表示"无角色"的值
@@ -69,7 +71,14 @@ interface TaskFormDialogProps {
   task?: Task | null // 编辑时传入任务数据，添加时为 undefined
   quadrant?: QuadrantType // 添加时传入象限，编辑时从 task 中获取
   onOpenChange: (open: boolean) => void
-  onConfirm: (data: { title: string; description?: string; roleId?: string }) => void
+  onConfirm: (data: {
+    title: string
+    description?: string
+    roleId?: string
+    dueDate?: string
+    isAllDay?: boolean
+    recurrence?: RecurrenceRule
+  }) => void
 }
 
 /**
@@ -110,6 +119,13 @@ export default function TaskFormDialog({
   const { data: roles = [] } = useRoles()
   const { focusedRoleId } = useRoleStore()
 
+  // 日期状态管理
+  const [dateValue, setDateValue] = useState<{
+    dueDate?: string
+    isAllDay?: boolean
+    recurrence?: RecurrenceRule
+  }>({})
+
   /**
    * useForm Hook：管理表单状态和验证
    */
@@ -135,6 +151,11 @@ export default function TaskFormDialog({
           description: task.description || '',
           roleId: task.roleId || '',
         })
+        setDateValue({
+          dueDate: task.dueDate,
+          isAllDay: task.isAllDay,
+          recurrence: task.recurrence,
+        })
       } else {
         // 添加模式：智能默认值
         // 如果正在聚焦某个角色，自动选中该角色；否则为空
@@ -143,6 +164,7 @@ export default function TaskFormDialog({
           description: '',
           roleId: focusedRoleId || '',
         })
+        setDateValue({})
       }
     }
   }, [open, mode, task, focusedRoleId, form])
@@ -153,14 +175,18 @@ export default function TaskFormDialog({
   const handleSubmit = form.handleSubmit((data) => {
     // 调用父组件传递的确认回调
     const trimmedDescription = data.description?.trim()
-    
+
     // 简化处理：空字符串就传空字符串，服务端会将空字符串转为 null 清空字段
     onConfirm({
       title: data.title.trim(),
       description: trimmedDescription === '' ? '' : (trimmedDescription || undefined), // 空字符串传递空字符串
       roleId: data.roleId || undefined, // 空字符串转为 undefined
+      dueDate: dateValue.dueDate,
+      isAllDay: dateValue.isAllDay,
+      recurrence: dateValue.recurrence,
     })
     form.reset() // 重置表单
+    setDateValue({}) // 重置日期
     onOpenChange(false) // 关闭对话框
   })
 
@@ -172,6 +198,7 @@ export default function TaskFormDialog({
     // 如果关闭对话框，重置表单
     if (!open) {
       form.reset()
+      setDateValue({})
     }
   }
 
@@ -195,6 +222,9 @@ export default function TaskFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{mode === 'add' ? '添加任务' : '编辑任务'}</DialogTitle>
+          <DialogDescription>
+            {mode === 'add' ? '创建一个新任务' : '修改任务信息'}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -271,6 +301,14 @@ export default function TaskFormDialog({
                   </FormItem>
                 )}
               />
+
+              {/* 日期设置 */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  截止日期（可选）
+                </label>
+                <DateTimePicker value={dateValue} onChange={setDateValue} />
+              </div>
 
               {/* 所属角色 */}
               <FormField
