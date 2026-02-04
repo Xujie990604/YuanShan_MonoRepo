@@ -1,0 +1,312 @@
+---
+inclusion: fileMatch
+fileMatchPattern: "apps/keyDoWeb/**/*"
+---
+
+# keyDoWeb 项目规则
+
+## ⚠️ 重要提示
+
+**生成任何 UI 代码前，必须严格遵守本项目的 UI 设计规范！**
+
+**详细规范请查看：`apps/keyDoWeb/UI_GUIDE.md`**
+
+核心原则：
+- ✅ 只使用语义化颜色（`primary`, `secondary`, `muted` 等）
+- ✅ 只使用标准间距（4的倍数：`p-4`, `p-6`, `p-8`）
+- ✅ 使用 `cn()` 函数合并类名
+- ✅ 添加 hover 和 transition 效果
+- ❌ 禁止使用具体颜色值（如 `bg-blue-500`）
+- ❌ 禁止使用非标准间距（如 `p-3`, `p-5`）
+
+## 技术栈
+
+1. **React 19.2.0** + TypeScript
+2. **Vite 7.x** 构建工具
+3. **Tailwind CSS 4.x** + shadcn/ui 组件库
+4. **React Router v7** 路由管理
+5. **TanStack Query** 服务端状态管理
+6. **Zustand** 客户端 UI 状态管理
+7. **lucide-react** 图标库
+
+## 项目结构
+
+```
+src/
+├── components/       # 公共组件
+│   └── ui/          # shadcn/ui 组件（自动生成）
+├── pages/           # 页面组件
+├── hooks/           # 自定义 Hooks
+├── lib/             # 工具函数（如 cn() 类名合并）
+├── router/          # 路由配置
+├── services/        # API 服务（未来添加）
+├── store/           # Zustand 状态管理（未来添加）
+├── App.tsx          # 根组件
+├── main.tsx         # 入口文件
+└── index.css        # 全局样式（含 Tailwind CSS 配置）
+```
+
+## 代码规范
+
+### 组件开发
+- 使用函数式组件 + Hooks
+- 组件文件使用大驼峰命名（PascalCase）：`Button.tsx`, `UserCard.tsx`
+- 每个组件导出为默认导出：`export default function MyComponent() {}`
+
+### 样式规范
+
+**⚠️ 必须严格遵守 `UI_GUIDE.md` 中的 UI 设计规范**
+
+基本原则：
+- 优先使用 Tailwind CSS 工具类，不写自定义 CSS
+- 使用 shadcn/ui 组件，不要从零开始造轮子
+- 使用 `cn()` 函数合并类名（从 `@/lib/utils` 导入）
+- 示例：`className={cn("base-class", isActive && "active-class")}`
+
+### 状态管理
+- **UI 状态**（主题、侧边栏、模态框等）→ 使用 **Zustand**
+- **服务端数据**（API 数据、缓存）→ 使用 **TanStack Query**
+- **组件内部状态** → 使用 `useState`
+- **不要混用**：不要用 TanStack Query 管理 UI 状态
+
+### 路由规范
+- 使用 `createBrowserRouter` 创建路由
+- 使用 `<Outlet />` 渲染子路由
+- 路由配置集中在 `src/router/index.tsx`
+- 推荐路由懒加载：`const Home = lazy(() => import('@/pages/home'))`
+
+### TypeScript 规范
+- 所有组件必须有类型定义
+- 使用 `interface` 定义组件 Props
+- API 响应数据定义类型接口
+- 避免使用 `any`，必要时使用 `unknown`
+
+### 类型统一管理（重要）
+
+**前后端类型统一使用 `@yuan-shan/keydo-contract` 包管理**
+
+#### 基本原则
+- ✅ **必须从 `@yuan-shan/keydo-contract` 导入 API 相关的类型和 Schema**
+- ✅ 所有与后端接口相关的类型（请求参数、响应数据）都在 `keyDoContract` 中定义
+- ✅ 使用 `keyDoContract` 中的 Zod Schema 进行表单校验
+- ❌ **禁止在前端项目中重复定义与后端共享的类型**
+- ❌ 禁止手动定义 API 请求/响应的 TypeScript 类型（除非是纯前端类型）
+
+#### 使用方式
+
+**1. 导入类型**
+```typescript
+// 从 keyDoContract 导入类型
+import type { SigninInput, SigninResponse, SignupInput, SignupResponse } from '@yuan-shan/keydo-contract';
+```
+
+**2. 导入 Zod Schema（用于表单校验）**
+```typescript
+// 导入 Zod Schema
+import { signinSchema, signupSchema } from '@yuan-shan/keydo-contract';
+
+// 结合 react-hook-form 使用
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const form = useForm<SigninInput>({
+  resolver: zodResolver(signinSchema), // 使用共享的 Schema
+  defaultValues: {
+    username: '',
+    password: '',
+  },
+});
+```
+
+**3. API 函数使用共享类型**
+```typescript
+import { apiClient } from '@/lib/axios';
+import type { SigninInput, SigninResponse } from '@yuan-shan/keydo-contract';
+
+// ✅ 正确：使用共享类型
+export function login(data: SigninInput): Promise<SigninResponse> {
+  return apiClient.post('/auth/signin', data);
+}
+
+// ❌ 错误：不要自己定义类型
+// interface LoginData { username: string; password: string; } // 禁止！
+```
+
+**4. 处理 UI 字段与 API 字段的差异**
+- **场景 1：UI 字段多于 API 字段**（如注册表单的"确认密码"）
+  - 使用 Zod 的 `.extend()` 扩展 UI Schema
+  - 提交时过滤掉 UI 独有字段
+  - 示例参考：`src/pages/auth/signup.tsx`
+
+- **场景 2：UI 字段名称与 API 字段名称不同**
+  - 提交时进行字段映射转换
+  - 保持 `keyDoContract` 中的类型与后端接口一致
+
+#### keyDoContract 包说明
+- **位置**：`packages/keyDoContract`
+- **作用**：前后端共享的类型定义和 Zod Schema
+- **维护**：类型定义和 Schema 统一在此包中维护，前后端都从此包导入
+- **扩展**：如果后端新增接口，对应的类型和 Schema 应添加到 `keyDoContract` 中
+
+### 图标使用
+- 使用 `lucide-react` 图标库
+- 示例：`import { Menu, X, ChevronRight } from 'lucide-react'`
+- 图标命名采用大驼峰：`<Menu className="w-6 h-6" />`
+
+## shadcn/ui 使用
+
+### 添加组件
+```bash
+npx shadcn@latest add button
+npx shadcn@latest add card
+npx shadcn@latest add dialog
+```
+
+### 使用组件
+```tsx
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+<Button variant="default" size="lg">点击</Button>
+```
+
+### 自定义组件
+- shadcn/ui 组件源码在 `src/components/ui/`
+- 可以直接修改源码定制样式
+- 使用 CVA (class-variance-authority) 定义变体
+
+## 依赖管理
+
+### 公共依赖（已在根目录）
+- axios, dayjs, react-router-dom, zustand, @tanstack/react-query
+- **不要在 keyDoWeb 中重复安装**
+
+### 共享类型包（workspace 依赖）
+- `@yuan-shan/keydo-contract`：前后端共享的类型定义和 Zod Schema
+- 这是 monorepo 内的 workspace 依赖，通过 `workspace:*` 引用
+- **所有 API 相关类型必须从此包导入，不要重复定义**
+
+### keyDoWeb 特有依赖
+- shadcn/ui 相关：class-variance-authority, clsx, tailwind-merge, lucide-react
+- 表单校验：react-hook-form, @hookform/resolvers, zod
+- 安装命令：`pnpm --filter @yuan-shan/keyDoWeb add [package]`
+
+## 开发工作流
+
+### 启动开发服务器
+```bash
+cd apps/keyDoWeb
+pnpm dev
+```
+
+### 构建生产版本
+```bash
+pnpm build
+```
+
+### 代码检查
+```bash
+pnpm lint
+```
+
+## 常见任务
+
+### 创建新页面
+1. 在 `src/pages/` 创建目录：`src/pages/dashboard/index.tsx`
+2. 在 `src/router/index.tsx` 添加路由配置
+3. 使用 Tailwind CSS 编写样式
+
+### 添加 API 请求
+1. **从 `keyDoContract` 导入类型**：确保使用共享的类型定义
+2. 在 `src/api/` 创建 API 函数（使用共享类型）
+3. 在 `src/hooks/` 创建自定义 Hook，使用 TanStack Query
+4. 示例：
+```tsx
+// src/api/users.ts
+import { apiClient } from '@/lib/axios';
+import type { User, CreateUserInput } from '@yuan-shan/keydo-contract';
+
+export function getUsers(): Promise<User[]> {
+  return apiClient.get('/users');
+}
+
+export function createUser(data: CreateUserInput): Promise<User> {
+  return apiClient.post('/users', data);
+}
+
+// src/hooks/use-users.ts
+import { useQuery, useMutation } from '@tanstack/react-query';
+import * as userApi from '@/api/users';
+import { queryKeys } from './query-keys';
+
+export function useUsers() {
+  return useQuery({
+    queryKey: queryKeys.users.list(),
+    queryFn: userApi.getUsers,
+  });
+}
+```
+
+### 添加全局状态
+1. 在 `src/store/` 创建 Zustand store
+2. 使用 `persist` 中间件持久化状态
+3. 示例：
+```tsx
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+export const useUIStore = create(
+  persist(
+    (set) => ({
+      theme: 'light',
+      setTheme: (theme) => set({ theme }),
+    }),
+    { name: 'ui-storage' }
+  )
+)
+```
+
+## 注意事项
+
+1. **路径别名**：使用 `@/` 代替 `src/`，如 `import { cn } from '@/lib/utils'`
+2. **Tailwind 版本**：使用 4.x 版本，配置方式与 3.x 不同
+3. **React 19**：使用最新的 React 特性，注意与旧版本的差异
+4. **不写 API Mock**：等真实 API 接口完成后再开发接口相关功能
+5. **保持简洁**：不要过度设计，优先实现功能
+6. **多写注释**： 因为我不熟悉 React 语法以及相关配套的工具使用，请尽量写出注释
+
+## ⚠️ UI 规范（强制执行）
+
+**所有 UI 相关的详细规范、示例、模板请查看：`apps/keyDoWeb/UI_GUIDE.md`**
+
+生成任何 UI 代码前，必须：
+1. 参考 `UI_GUIDE.md` 中的颜色、间距、圆角规范
+2. 复制使用 `UI_GUIDE.md` 中的标准模板
+3. 遵循 `UI_GUIDE.md` 中的布局和组件规范
+
+## 代码注释规范
+
+- 使用中文注释
+- 复杂逻辑添加注释说明
+- 函数和组件添加 JSDoc 注释（如有必要）
+- 示例：
+```tsx
+/**
+ * 用户列表页面
+ * 展示所有用户信息，支持搜索和分页
+ */
+export default function UsersPage() {
+  // 获取用户数据
+  const { data: users } = useUsers()
+  
+  return <div>...</div>
+}
+```
+
+## 性能优化建议
+
+- 使用 `React.memo()` 优化重渲染
+- 使用 `useMemo` 和 `useCallback` 缓存计算结果
+- 路由懒加载减少初始包大小
+- 图片使用 WebP 格式，添加懒加载
+- TanStack Query 自动处理数据缓存
