@@ -3,14 +3,7 @@ import { useRoles } from '@/hooks/use-roles'
 import { useRoleStore } from '@/store/role'
 
 /**
- * 角色聚焦 Banner 组件 (仅查看,不支持编辑)
- * 
- * 设计参考 v0 Task Management Dashboard:
- * - 淡色背景 (根据角色主题色)
- * - 左侧: 大号 Emoji 图标
- * - 中间: 角色名称
- * - 右侧: × 关闭按钮
- * - 下方: 引号包裹的宣言
+ * 角色聚焦 Banner 组件
  */
 export default function RoleFocusBanner() {
   const { focusedRoleId, clearFocus } = useRoleStore()

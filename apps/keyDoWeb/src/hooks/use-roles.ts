@@ -37,6 +37,8 @@ export function useUpdateRole() {
     onSuccess: () => {
       // 更新成功后，刷新角色列表
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() })
+      // 更新角色后，刷新任务列表（任务可能显示角色信息）
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() })
     },
   })
 }
@@ -49,7 +51,9 @@ export function useDeleteRole() {
   return useMutation({
     mutationFn: (id: string) => roleApi.deleteRole(id),
     onSuccess: () => {
+      // 删除角色后，刷新角色列表
       queryClient.invalidateQueries({ queryKey: queryKeys.roles.list() })
+      // 删除角色后，刷新任务列表
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() })
     },
   })

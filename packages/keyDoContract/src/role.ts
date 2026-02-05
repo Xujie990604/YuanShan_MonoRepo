@@ -58,10 +58,3 @@ export const updateRoleSchema = z.object({
 })
 
 export type UpdateRoleInput = z.infer<typeof updateRoleSchema>
-
-// 角色统计信息
-export interface RoleStats {
-  roleId: string
-  taskCount: number      // 该角色下的任务总数
-  completedCount: number // 已完成任务数
-}

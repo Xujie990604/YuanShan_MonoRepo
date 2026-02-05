@@ -7,13 +7,13 @@ import { useRoleStore } from '@/store/role'
 import RoleManageDialog from '@/components/role/RoleManageDialog'
 
 /**
- * 角色列表组件 (v0 风格)
+ * 角色列表组件
  * 
  * 设计参考:
- * - 分组标题 "My Roles 人生角色"
- * - "全部任务" 作为默认选项（彩色四象限图标）
+ * - 分组标题 "人生角色"
+ * - "全部任务" 作为默认选项
  * - 角色项: 图标 + 名称
- * - 底部: "Manage Roles 3/5" 管理入口
+ * - 底部: "管理角色 3/5" 管理入口
  */
 export default function RoleList() {
   const { data: roles = [], isLoading } = useRoles()
@@ -75,7 +75,7 @@ export default function RoleList() {
         onClick={() => setManageDialogOpen(true)}
       >
         <Settings2 className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-left">管理角色</span>
+        <span className="flex-1 text-left">角色管理</span>
         <span className="text-xs">{roles.length}/5</span>
       </button>
 
