@@ -139,9 +139,12 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
   // 处理重复规则选择
   const handleRecurrenceChange = (value: string) => {
     setRecurrenceValue(value);
-    if (selectedDate) {
-      updateValue(selectedDate, includeTime, value);
+    // 未选日期时也生效：用东八区「今天」作为基准日，避免只选重复不生效
+    const dateToUse = selectedDate || getTodayDate();
+    if (!selectedDate) {
+      setSelectedDate(dateToUse);
     }
+    updateValue(dateToUse, includeTime, value);
   };
 
   // 更新值的统一方法（按东八区输出日期）
