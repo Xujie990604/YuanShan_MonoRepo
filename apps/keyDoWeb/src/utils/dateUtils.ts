@@ -1,58 +1,90 @@
-import {
-  format,
-  isToday,
-  isTomorrow,
-  isPast,
-  startOfDay,
-  addDays,
-  nextMonday,
-  getDay,
-  getDate,
-} from 'date-fns';
-import { zhCN } from 'date-fns/locale';
+import { isPast, addDays } from 'date-fns';
 import type { RecurrenceRule } from '@yuan-shan/keydo-contract';
 
+/** 应用统一使用东八区（中国标准时间），不依赖用户本地时区 */
+const TZ_ASIA_SHANGHAI = 'Asia/Shanghai';
+
 /**
- * 获取今天的日期（00:00:00）
+ * 获取东八区下某时刻的日期字符串 YYYY-MM-DD（供展示、存储、计算统一按东八区使用）
+ */
+export function getDateStringInUTC8(date: Date): string {
+  return date.toLocaleDateString('en-CA', { timeZone: TZ_ASIA_SHANGHAI });
+}
+
+/**
+ * 将 YYYY-MM-DD 和可选的 HH:mm 解析为东八区对应的时刻（Date 对象）
+ */
+export function parseDateInUTC8(dateStr: string, timeStr?: string): Date {
+  const time = timeStr ? timeStr : '00:00';
+  return new Date(`${dateStr}T${time}:00+08:00`);
+}
+
+/**
+ * 获取东八区「今天」的 0 点时刻（Date）
  */
 export function getTodayDate(): Date {
-  return startOfDay(new Date());
+  const todayStr = getDateStringInUTC8(new Date());
+  return parseDateInUTC8(todayStr, '00:00');
 }
 
 /**
- * 获取明天的日期（00:00:00）
+ * 获取东八区「明天」的 0 点时刻（Date）
  */
 export function getTomorrowDate(): Date {
-  return startOfDay(addDays(new Date(), 1));
+  return addDays(getTodayDate(), 1);
 }
 
 /**
- * 获取下周一的日期（00:00:00）
+ * 获取东八区「下周一」的 0 点时刻（Date）
  */
 export function getNextMondayDate(): Date {
-  return startOfDay(nextMonday(new Date()));
+  const today = getTodayDate();
+  const dayOfWeek = getDayInUTC8(today);
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+  return addDays(today, daysUntilMonday);
+}
+
+/** 东八区下某 Date 的星期几（0=周日, 1=周一, ..., 6=周六） */
+function getDayInUTC8(date: Date): number {
+  const utc8 = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  return utc8.getUTCDay();
+}
+
+/** 东八区下某 Date 的日期（1-31） */
+function getDateInUTC8(date: Date): number {
+  const utc8 = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+  return utc8.getUTCDate();
+}
+
+/** 东八区下某时刻是否属于「今天」 */
+export function isTodayInUTC8(date: Date): boolean {
+  return getDateStringInUTC8(date) === getDateStringInUTC8(new Date());
+}
+
+/** 东八区下某时刻是否属于「明天」 */
+export function isTomorrowInUTC8(date: Date): boolean {
+  const tomorrowStr = getDateStringInUTC8(addDays(new Date(), 1));
+  return getDateStringInUTC8(date) === tomorrowStr;
 }
 
 /**
- * 格式化任务日期显示
- * @param dateStr ISO 8601 格式的日期字符串
- * @param isAllDay 是否全天任务
+ * 格式化任务日期显示（东八区）
+ * @param dateStr 日期字符串（格式：YYYY-MM-DD）
+ * @param timeStr 时间字符串（格式：HH:mm），可选
  * @returns 格式化后的日期字符串
  */
-export function formatTaskDate(dateStr: string, isAllDay: boolean): string {
-  const date = new Date(dateStr);
+export function formatTaskDate(dateStr: string, timeStr?: string): string {
+  const date = parseDateInUTC8(dateStr, timeStr);
+  const timeDisplay = timeStr ? ` ${timeStr}` : '';
 
-  if (isToday(date)) {
-    return isAllDay ? '今天' : `今天 ${format(date, 'HH:mm')}`;
+  if (isTodayInUTC8(date)) {
+    return `今天${timeDisplay}`;
   }
-
-  if (isTomorrow(date)) {
-    return isAllDay ? '明天' : `明天 ${format(date, 'HH:mm')}`;
+  if (isTomorrowInUTC8(date)) {
+    return `明天${timeDisplay}`;
   }
-
-  // 其他日期
-  const dateFormat = isAllDay ? 'M月d日' : 'M月d日 HH:mm';
-  return format(date, dateFormat, { locale: zhCN });
+  const [, m, d] = dateStr.split('-');
+  return `${parseInt(m, 10)}月${parseInt(d, 10)}日${timeDisplay}`;
 }
 
 /**
@@ -81,7 +113,7 @@ export function formatRecurrence(rule: RecurrenceRule): string {
 }
 
 /**
- * 智能推导重复选项（根据选中的日期）
+ * 智能推导重复选项（根据选中的日期，按东八区取星期几与几号）
  * @param selectedDate 选中的日期
  * @returns 重复选项数组
  */
@@ -89,8 +121,8 @@ export function generateRecurrenceOptions(selectedDate: Date): Array<{
   value: string;
   label: string;
 }> {
-  const dayOfWeek = getDay(selectedDate);
-  const dayOfMonth = getDate(selectedDate);
+  const dayOfWeek = getDayInUTC8(selectedDate);
+  const dayOfMonth = getDateInUTC8(selectedDate);
   const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
 
   return [
@@ -114,11 +146,12 @@ export function generateRecurrenceOptions(selectedDate: Date): Array<{
 }
 
 /**
- * 判断任务是否过期
- * @param dueDate ISO 8601 格式的日期字符串
+ * 判断任务是否过期（截止时刻按东八区解析，过期 = 已过该时刻且不是东八区今天）
+ * @param dueDate 日期字符串（格式：YYYY-MM-DD）
+ * @param dueTime 时间字符串（格式：HH:mm），可选
  * @returns 是否过期
  */
-export function isOverdue(dueDate: string): boolean {
-  const date = new Date(dueDate);
-  return isPast(date) && !isToday(date);
+export function isOverdue(dueDate: string, dueTime?: string): boolean {
+  const date = parseDateInUTC8(dueDate, dueTime);
+  return isPast(date) && !isTodayInUTC8(date);
 }

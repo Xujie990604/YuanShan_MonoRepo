@@ -33,8 +33,8 @@ export interface Task {
   roleId?: string; // 关联的角色 ID（可选）
 
   // 日期相关字段
-  dueDate?: string;           // ISO 8601 格式，如 "2026-02-06T14:00:00.000+08:00"
-  isAllDay?: boolean;         // 是否全天任务
+  dueDate?: string;           // 日期，格式：YYYY-MM-DD（如 "2026-02-06"）
+  dueTime?: string;           // 时间，格式：HH:mm（如 "14:30"），不存在表示全天
   recurrence?: RecurrenceRule; // 重复规则
 
   createdAt: string; // ISO 8601 格式
@@ -58,8 +58,8 @@ export const createTaskSchema = z.object({
   roleId: z.string().uuid().optional(), // 关联的角色 ID（可选）
 
   // 日期字段验证
-  dueDate: z.string().datetime({ offset: true }).optional(),
-  isAllDay: z.boolean().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD').optional(),
+  dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, '时间格式必须为 HH:mm').optional(),
   recurrence: z.object({
     type: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
     interval: z.number().int().min(1).default(1),
@@ -92,8 +92,8 @@ export const updateTaskSchema = z.object({
   roleId: z.string().uuid().nullable().optional(), // 关联的角色 ID（可选，支持设为 null）
 
   // 日期字段验证
-  dueDate: z.string().datetime({ offset: true }).optional(),
-  isAllDay: z.boolean().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD').nullable().optional(),
+  dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, '时间格式必须为 HH:mm').nullable().optional(),
   recurrence: z.object({
     type: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']),
     interval: z.number().int().min(1).default(1),

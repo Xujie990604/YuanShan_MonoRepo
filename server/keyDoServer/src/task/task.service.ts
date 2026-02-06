@@ -48,7 +48,7 @@ export class TaskService {
    * 使用 LexoRank 计算 order 值
    */
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
-    const { title, description, quadrant, roleId, dueDate, isAllDay, recurrence } = createTaskInput;
+    const { title, description, quadrant, roleId, dueDate, dueTime, recurrence } = createTaskInput;
 
     // 获取目标象限最后一个未完成任务的 order
     // 按 order 降序排列，取第一个即为最后一个任务
@@ -73,8 +73,8 @@ export class TaskService {
         order: newOrder,
         roleId, // 新增：关联角色 ID
         completed: false,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        isAllDay: isAllDay ?? true,
+        dueDate: dueDate || null,
+        dueTime: dueTime || null,
         recurrence: recurrence ? JSON.stringify(recurrence) : null,
       },
     });
@@ -91,8 +91,8 @@ export class TaskService {
    * - quadrant: 所属象限（跨象限拖拽）
    * - completed: 完成状态
    * - order: 排序值（象限内排序或跨象限后的位置）
-   * - dueDate: 截止日期
-   * - isAllDay: 是否全天任务
+   * - dueDate: 截止日期（YYYY-MM-DD）
+   * - dueTime: 时间（HH:mm）
    * - recurrence: 重复规则
    */
   async update(id: string, userId: number, updateTaskInput: UpdateTaskInput): Promise<Task> {
@@ -105,7 +105,7 @@ export class TaskService {
       throw new NotFoundException('任务不存在');
     }
 
-    const { title, description, quadrant, completed, order, roleId, dueDate, isAllDay, recurrence } = updateTaskInput;
+    const { title, description, quadrant, completed, order, roleId, dueDate, dueTime, recurrence } = updateTaskInput;
 
     // 构建更新数据，只包含传入的字段
     // 注意：description 和 roleId 的处理
@@ -123,8 +123,8 @@ export class TaskService {
         ...(completed !== undefined && { completed }),
         ...(order !== undefined && { order }),  // 支持 order 更新
         ...(roleId !== undefined && { roleId }),  // 新增：支持 roleId 更新（可为 null）
-        ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
-        ...(isAllDay !== undefined && { isAllDay }),
+        ...(dueDate !== undefined && { dueDate: dueDate || null }),
+        ...(dueTime !== undefined && { dueTime: dueTime || null }),
         ...(recurrence !== undefined && { recurrence: recurrence ? JSON.stringify(recurrence) : null }),
       },
     });
@@ -170,7 +170,11 @@ export class TaskService {
     // 如果是重复任务，自动生成下一个实例
     if (task.recurrence) {
       const recurrence = JSON.parse(task.recurrence) as RecurrenceRule;
-      const nextDueDate = this.calculateNextDueDate(new Date(), recurrence);
+      // calculateNextDueDate 已返回 YYYY-MM-DD 字符串，Prisma 的 dueDate/dueTime 为 String?
+      const nextDueDate = this.calculateNextDueDate(
+        task.dueDate ? new Date(task.dueDate + 'T00:00:00+08:00') : new Date(),
+        recurrence
+      );
 
       await this.prisma.task.create({
         data: {
@@ -182,7 +186,7 @@ export class TaskService {
           order: getRankBetween(null, null), // 插入到列表顶部
           completed: false,
           dueDate: nextDueDate,
-          isAllDay: task.isAllDay,
+          dueTime: task.dueTime,
           recurrence: task.recurrence,
         },
       });
@@ -192,9 +196,9 @@ export class TaskService {
   }
 
   /**
-   * 计算下一个截止日期
+   * 计算下一个截止日期（格式：YYYY-MM-DD）
    */
-  private calculateNextDueDate(baseDate: Date, rule: RecurrenceRule): Date {
+  private calculateNextDueDate(baseDate: Date, rule: RecurrenceRule): string {
     const result = new Date(baseDate);
 
     switch (rule.type) {
@@ -209,7 +213,11 @@ export class TaskService {
         break;
     }
 
-    return result;
+    // 格式化为 YYYY-MM-DD
+    const year = result.getFullYear();
+    const month = String(result.getMonth() + 1).padStart(2, '0');
+    const day = String(result.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -224,8 +232,8 @@ export class TaskService {
       completed: task.completed,
       order: task.order,
       roleId: task.roleId ?? undefined, // 新增：返回 roleId（null 转为 undefined）
-      dueDate: task.dueDate ? this.formatDateWithTimezone(task.dueDate) : undefined,
-      isAllDay: task.isAllDay ?? undefined,
+      dueDate: task.dueDate ?? undefined,
+      dueTime: task.dueTime ?? undefined,
       recurrence: task.recurrence ? JSON.parse(task.recurrence) : undefined,
       createdAt: task.createdAt.toISOString(),
       updatedAt: task.updatedAt.toISOString(),
@@ -233,16 +241,12 @@ export class TaskService {
   }
 
   /**
-   * 格式化日期为带时区的 ISO 字符串（北京时间 UTC+8）
+   * 格式化日期为 YYYY-MM-DD 字符串
    */
-  private formatDateWithTimezone(date: Date): string {
+  private formatDateString(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}+08:00`;
+    return `${year}-${month}-${day}`;
   }
 }

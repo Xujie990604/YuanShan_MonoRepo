@@ -5,8 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import TaskContextMenu from './TaskContextMenu'
 import { useRoles } from '@/hooks/use-roles'
-import { formatTaskDate, formatRecurrence, isOverdue } from '@/utils/dateUtils'
-import { isToday } from 'date-fns'
+import { formatTaskDate, formatRecurrence, isOverdue, isTodayInUTC8, parseDateInUTC8 } from '@/utils/dateUtils'
 import type { Task } from '@yuan-shan/keydo-contract'
 import { cn } from '@/lib/utils'
 
@@ -70,8 +69,8 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
   /**
    * 判断日期状态
    */
-  const isTaskOverdue = task.dueDate && !task.completed ? isOverdue(task.dueDate) : false
-  const isTaskToday = task.dueDate ? isToday(new Date(task.dueDate)) : false
+  const isTaskOverdue = task.dueDate && !task.completed ? isOverdue(task.dueDate, task.dueTime) : false
+  const isTaskToday = task.dueDate ? isTodayInUTC8(parseDateInUTC8(task.dueDate, task.dueTime)) : false
 
   /**
    * 点击处理（仅未完成任务支持编辑）
@@ -145,7 +144,7 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
               )}
             >
               <Calendar className="h-3 w-3" />
-              <span>{formatTaskDate(task.dueDate, task.isAllDay ?? true)}</span>
+              <span>{formatTaskDate(task.dueDate, task.dueTime)}</span>
             </Badge>
           )}
 
@@ -158,8 +157,8 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
               <Repeat className="h-3 w-3" />
               <span>
                 {formatRecurrence(task.recurrence)}
-                {task.dueDate && !(task.isAllDay ?? true) && (
-                  <> {new Date(task.dueDate).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</>
+                {task.dueTime && (
+                  <> {task.dueTime}</>
                 )}
               </span>
             </Badge>

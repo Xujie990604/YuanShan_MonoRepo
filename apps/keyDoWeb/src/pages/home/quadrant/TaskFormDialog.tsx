@@ -76,7 +76,7 @@ interface TaskFormDialogProps {
     description?: string
     roleId?: string
     dueDate?: string
-    isAllDay?: boolean
+    dueTime?: string
     recurrence?: RecurrenceRule
   }) => void
 }
@@ -122,7 +122,7 @@ export default function TaskFormDialog({
   // 日期状态管理
   const [dateValue, setDateValue] = useState<{
     dueDate?: string
-    isAllDay?: boolean
+    dueTime?: string
     recurrence?: RecurrenceRule
   }>({})
 
@@ -153,7 +153,7 @@ export default function TaskFormDialog({
         })
         setDateValue({
           dueDate: task.dueDate,
-          isAllDay: task.isAllDay,
+          dueTime: task.dueTime,
           recurrence: task.recurrence,
         })
       } else {
@@ -182,7 +182,7 @@ export default function TaskFormDialog({
       description: trimmedDescription === '' ? '' : (trimmedDescription || undefined), // 空字符串传递空字符串
       roleId: data.roleId || undefined, // 空字符串转为 undefined
       dueDate: dateValue.dueDate,
-      isAllDay: dateValue.isAllDay,
+      dueTime: dateValue.dueTime,
       recurrence: dateValue.recurrence,
     })
     form.reset() // 重置表单

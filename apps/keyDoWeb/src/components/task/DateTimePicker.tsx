@@ -22,17 +22,19 @@ import {
   getNextMondayDate,
   formatTaskDate,
   generateRecurrenceOptions,
+  parseDateInUTC8,
+  getDateStringInUTC8,
 } from '@/utils/dateUtils';
 
 interface DateTimePickerProps {
   value?: {
-    dueDate?: string;
-    isAllDay?: boolean;
+    dueDate?: string;      // YYYY-MM-DD 格式
+    dueTime?: string;      // HH:mm 格式
     recurrence?: RecurrenceRule;
   };
   onChange: (value: {
     dueDate?: string;
-    isAllDay?: boolean;
+    dueTime?: string;
     recurrence?: RecurrenceRule;
   }) => void;
 }
@@ -40,34 +42,46 @@ interface DateTimePickerProps {
 export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
   const [open, setOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    value?.dueDate ? new Date(value.dueDate) : undefined
+    value?.dueDate ? parseDateInUTC8(value.dueDate, value?.dueTime ?? '00:00') : undefined
   );
-  // 默认不包含时间（全天任务）
-  const [includeTime, setIncludeTime] = useState(
-    value?.isAllDay !== undefined ? !value.isAllDay : false
-  );
-  const [selectedHour, setSelectedHour] = useState(
-    value?.dueDate ? new Date(value.dueDate).getHours() : 9
-  );
-  const [selectedMinute, setSelectedMinute] = useState(
-    value?.dueDate ? new Date(value.dueDate).getMinutes() : 0
-  );
+  // 是否包含时间（通过 dueTime 是否存在判断）
+  const [includeTime, setIncludeTime] = useState(!!value?.dueTime);
+  
+  // 从 dueTime 解析时分
+  const [selectedHour, setSelectedHour] = useState(() => {
+    if (value?.dueTime) {
+      return parseInt(value.dueTime.split(':')[0], 10);
+    }
+    return 9;
+  });
+  const [selectedMinute, setSelectedMinute] = useState(() => {
+    if (value?.dueTime) {
+      return parseInt(value.dueTime.split(':')[1], 10);
+    }
+    return 0;
+  });
+  
   const [recurrenceValue, setRecurrenceValue] = useState(
     value?.recurrence ? JSON.stringify(value.recurrence) : '__none__'
   );
 
-  // 当 value prop 改变时，同步内部状态
+  // 当 value prop 改变时，同步内部状态（按东八区解析）
   useEffect(() => {
     if (value?.dueDate) {
-      const date = new Date(value.dueDate);
-      setSelectedDate(date);
-      setSelectedHour(date.getHours());
-      setSelectedMinute(date.getMinutes());
+      setSelectedDate(parseDateInUTC8(value.dueDate, value?.dueTime ?? '00:00'));
     } else {
       setSelectedDate(undefined);
     }
 
-    setIncludeTime(value?.isAllDay !== undefined ? !value.isAllDay : false);
+    if (value?.dueTime) {
+      const [hour, minute] = value.dueTime.split(':').map(v => parseInt(v, 10));
+      setSelectedHour(hour);
+      setSelectedMinute(minute);
+      setIncludeTime(true);
+    } else {
+      setIncludeTime(false);
+    }
+
     setRecurrenceValue(value?.recurrence ? JSON.stringify(value.recurrence) : '__none__');
   }, [value]);
 
@@ -130,7 +144,7 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
     }
   };
 
-  // 更新值的统一方法
+  // 更新值的统一方法（按东八区输出日期）
   const updateValue = (
     date: Date,
     withTime: boolean,
@@ -138,26 +152,19 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
     hour = selectedHour,
     minute = selectedMinute
   ) => {
-    // 构建本地时间字符串（不进行时区转换）
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = getDateStringInUTC8(date);
 
-    let dateTimeString: string;
-    if (withTime) {
-      const hourStr = String(hour).padStart(2, '0');
-      const minuteStr = String(minute).padStart(2, '0');
-      dateTimeString = `${year}-${month}-${day}T${hourStr}:${minuteStr}:00.000+08:00`;
-    } else {
-      dateTimeString = `${year}-${month}-${day}T00:00:00.000+08:00`;
-    }
+    // 格式化时间为 HH:mm（仅当包含时间时）
+    const timeString = withTime
+      ? `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+      : undefined;
 
     // 处理特殊值 __none__
     const hasRecurrence = recurrence && recurrence !== '__none__';
 
     onChange({
-      dueDate: dateTimeString, // 重复任务也需要 dueDate 作为基准时间
-      isAllDay: !withTime,
+      dueDate: dateString,
+      dueTime: timeString,
       recurrence: hasRecurrence ? JSON.parse(recurrence) : undefined,
     });
   };
@@ -185,21 +192,15 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
         text = '重复';
       }
 
-      // 如果有时间且不是全天任务，添加时间显示
-      if (value.dueDate && !(value.isAllDay ?? true)) {
-        const date = new Date(value.dueDate);
-        const timeStr = date.toLocaleTimeString('zh-CN', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false
-        });
-        text += ` ${timeStr}`;
+      // 如果有时间，添加时间显示
+      if (value.dueTime) {
+        text += ` ${value.dueTime}`;
       }
 
       return text;
     }
     if (value?.dueDate) {
-      return formatTaskDate(value.dueDate, value.isAllDay ?? true);
+      return formatTaskDate(value.dueDate, value.dueTime);
     }
     return '设置日期';
   }, [value]);

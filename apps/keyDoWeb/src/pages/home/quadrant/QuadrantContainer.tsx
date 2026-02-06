@@ -155,7 +155,7 @@ export default function QuadrantContainer() {
       description?: string
       roleId?: string
       dueDate?: string
-      isAllDay?: boolean
+      dueTime?: string
       recurrence?: RecurrenceRule
     }
   ) => {
@@ -164,7 +164,7 @@ export default function QuadrantContainer() {
       description: data.description,
       roleId: data.roleId,
       dueDate: data.dueDate,
-      isAllDay: data.isAllDay,
+      dueTime: data.dueTime,
       recurrence: data.recurrence,
       quadrant,
     })
@@ -186,7 +186,7 @@ export default function QuadrantContainer() {
     description?: string
     roleId?: string
     dueDate?: string
-    isAllDay?: boolean
+    dueTime?: string
     recurrence?: RecurrenceRule
   }) => {
     if (!editingTask) return
@@ -196,7 +196,7 @@ export default function QuadrantContainer() {
     const originalDescription = editingTask.description
     const originalRoleId = editingTask.roleId
     const originalDueDate = editingTask.dueDate
-    const originalIsAllDay = editingTask.isAllDay
+    const originalDueTime = editingTask.dueTime
     const originalRecurrence = editingTask.recurrence
 
     // 乐观更新
@@ -209,7 +209,7 @@ export default function QuadrantContainer() {
               description: data.description,
               roleId: data.roleId,
               dueDate: data.dueDate,
-              isAllDay: data.isAllDay,
+              dueTime: data.dueTime,
               recurrence: data.recurrence,
             }
           : t
@@ -225,7 +225,7 @@ export default function QuadrantContainer() {
           description: data.description,
           roleId: data.roleId,
           dueDate: data.dueDate,
-          isAllDay: data.isAllDay,
+          dueTime: data.dueTime,
           recurrence: data.recurrence,
         },
       },
@@ -241,7 +241,7 @@ export default function QuadrantContainer() {
                     description: originalDescription,
                     roleId: originalRoleId,
                     dueDate: originalDueDate,
-                    isAllDay: originalIsAllDay,
+                    dueTime: originalDueTime,
                     recurrence: originalRecurrence,
                   }
                 : t

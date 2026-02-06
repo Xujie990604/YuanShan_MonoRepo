@@ -21,8 +21,8 @@ var createTaskSchema = z.object({
   roleId: z.string().uuid().optional(),
   // 关联的角色 ID（可选）
   // 日期字段验证
-  dueDate: z.string().datetime({ offset: true }).optional(),
-  isAllDay: z.boolean().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "\u65E5\u671F\u683C\u5F0F\u5FC5\u987B\u4E3A YYYY-MM-DD").optional(),
+  dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, "\u65F6\u95F4\u683C\u5F0F\u5FC5\u987B\u4E3A HH:mm").optional(),
   recurrence: z.object({
     type: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
     interval: z.number().int().min(1).default(1),
@@ -43,8 +43,8 @@ var updateTaskSchema = z.object({
   roleId: z.string().uuid().nullable().optional(),
   // 关联的角色 ID（可选，支持设为 null）
   // 日期字段验证
-  dueDate: z.string().datetime({ offset: true }).optional(),
-  isAllDay: z.boolean().optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "\u65E5\u671F\u683C\u5F0F\u5FC5\u987B\u4E3A YYYY-MM-DD").nullable().optional(),
+  dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, "\u65F6\u95F4\u683C\u5F0F\u5FC5\u987B\u4E3A HH:mm").nullable().optional(),
   recurrence: z.object({
     type: z.enum(["DAILY", "WEEKLY", "MONTHLY"]),
     interval: z.number().int().min(1).default(1),

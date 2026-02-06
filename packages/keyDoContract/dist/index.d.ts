@@ -87,7 +87,7 @@ interface Task {
     order: string;
     roleId?: string;
     dueDate?: string;
-    isAllDay?: boolean;
+    dueTime?: string;
     recurrence?: RecurrenceRule;
     createdAt: string;
     updatedAt: string;
@@ -102,7 +102,7 @@ declare const createTaskSchema: z.ZodObject<{
     order: z.ZodOptional<z.ZodString>;
     roleId: z.ZodOptional<z.ZodString>;
     dueDate: z.ZodOptional<z.ZodString>;
-    isAllDay: z.ZodOptional<z.ZodBoolean>;
+    dueTime: z.ZodOptional<z.ZodString>;
     recurrence: z.ZodOptional<z.ZodObject<{
         type: z.ZodEnum<["DAILY", "WEEKLY", "MONTHLY"]>;
         interval: z.ZodDefault<z.ZodNumber>;
@@ -126,7 +126,7 @@ declare const createTaskSchema: z.ZodObject<{
     order?: string | undefined;
     roleId?: string | undefined;
     dueDate?: string | undefined;
-    isAllDay?: boolean | undefined;
+    dueTime?: string | undefined;
     recurrence?: {
         type: "DAILY" | "WEEKLY" | "MONTHLY";
         interval: number;
@@ -140,7 +140,7 @@ declare const createTaskSchema: z.ZodObject<{
     order?: string | undefined;
     roleId?: string | undefined;
     dueDate?: string | undefined;
-    isAllDay?: boolean | undefined;
+    dueTime?: string | undefined;
     recurrence?: {
         type: "DAILY" | "WEEKLY" | "MONTHLY";
         interval?: number | undefined;
@@ -162,8 +162,8 @@ declare const updateTaskSchema: z.ZodObject<{
     completed: z.ZodOptional<z.ZodBoolean>;
     order: z.ZodOptional<z.ZodString>;
     roleId: z.ZodOptional<z.ZodNullable<z.ZodString>>;
-    dueDate: z.ZodOptional<z.ZodString>;
-    isAllDay: z.ZodOptional<z.ZodBoolean>;
+    dueDate: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+    dueTime: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     recurrence: z.ZodOptional<z.ZodNullable<z.ZodObject<{
         type: z.ZodEnum<["DAILY", "WEEKLY", "MONTHLY"]>;
         interval: z.ZodDefault<z.ZodNumber>;
@@ -186,8 +186,8 @@ declare const updateTaskSchema: z.ZodObject<{
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;
-    dueDate?: string | undefined;
-    isAllDay?: boolean | undefined;
+    dueDate?: string | null | undefined;
+    dueTime?: string | null | undefined;
     recurrence?: {
         type: "DAILY" | "WEEKLY" | "MONTHLY";
         interval: number;
@@ -201,8 +201,8 @@ declare const updateTaskSchema: z.ZodObject<{
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;
-    dueDate?: string | undefined;
-    isAllDay?: boolean | undefined;
+    dueDate?: string | null | undefined;
+    dueTime?: string | null | undefined;
     recurrence?: {
         type: "DAILY" | "WEEKLY" | "MONTHLY";
         interval?: number | undefined;
@@ -261,10 +261,5 @@ declare const updateRoleSchema: z.ZodObject<{
     manifesto?: string | undefined;
 }>;
 type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
-interface RoleStats {
-    roleId: string;
-    taskCount: number;
-    completedCount: number;
-}
 
-export { type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type RecurrenceRule, type RecurrenceType, type Role, type RoleColor, type RoleStats, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
+export { type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type RecurrenceRule, type RecurrenceType, type Role, type RoleColor, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
