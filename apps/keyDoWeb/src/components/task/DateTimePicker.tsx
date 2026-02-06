@@ -120,9 +120,11 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
   // 处理时间开关
   const handleTimeToggle = (checked: boolean) => {
     setIncludeTime(checked);
-    if (selectedDate) {
-      updateValue(selectedDate, checked, recurrenceValue);
+    const dateToUse = selectedDate || getTodayDate();
+    if (!selectedDate && checked) {
+      setSelectedDate(dateToUse);
     }
+    updateValue(dateToUse, checked, recurrenceValue);
   };
 
   // 处理时间选择
@@ -131,9 +133,11 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
     const newMinute = minute ?? selectedMinute;
     setSelectedHour(newHour);
     setSelectedMinute(newMinute);
-    if (selectedDate) {
-      updateValue(selectedDate, includeTime, recurrenceValue, newHour, newMinute);
+    const dateToUse = selectedDate || getTodayDate();
+    if (!selectedDate) {
+      setSelectedDate(dateToUse);
     }
+    updateValue(dateToUse, includeTime, recurrenceValue, newHour, newMinute);
   };
 
   // 处理重复规则选择
@@ -225,7 +229,7 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
         onInteractOutside={(e) => e.preventDefault()}
       >
         <div className="flex flex-col space-y-3 p-3">
-          {/* 快捷按钮区 - 移除 X 按钮 */}
+          {/* 快捷按钮区 */}
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -259,7 +263,7 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             initialFocus
           />
 
-          {/* 时间开关 - 始终显示 */}
+          {/* 时间开关 */}
           <div className="flex items-center justify-between space-x-2 border-t pt-3">
             <Label htmlFor="include-time" className="text-sm">
               包含时间
@@ -271,8 +275,8 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             />
           </div>
 
-          {/* 时间选择器 */}
-          {selectedDate && includeTime && (
+          {/* 时间选择器：打开「包含时间」即显示，未选日期时以今天为基准 */}
+          {includeTime && (
             <div className="flex gap-2 items-center">
               <Select
                 value={selectedHour.toString()}
@@ -308,7 +312,7 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             </div>
           )}
 
-          {/* 重复规则选择器 - 始终显示 */}
+          {/* 重复规则选择器 */}
           <div className="border-t pt-3">
             <Label className="text-sm mb-2 block">重复</Label>
             <Select value={recurrenceValue} onValueChange={handleRecurrenceChange}>
