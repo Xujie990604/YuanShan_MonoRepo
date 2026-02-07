@@ -239,4 +239,4 @@ export class TaskService {
       updatedAt: task.updatedAt.toISOString(),
     };
   }
-
+}
