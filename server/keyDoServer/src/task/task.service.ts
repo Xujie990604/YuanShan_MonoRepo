@@ -68,13 +68,13 @@ export class TaskService {
       data: {
         userId,
         title,
-        description, // 新增：保存任务详情
+        description: description ?? null,
         quadrant,
         order: newOrder,
-        roleId, // 新增：关联角色 ID
+        roleId,
         completed: false,
-        dueDate: dueDate || null,
-        dueTime: dueTime || null,
+        dueDate: dueDate ?? null, // undefined→null，"" 原样存储（create schema 通常不传 ""）
+        dueTime: dueTime ?? null,
         recurrence: recurrence ? JSON.stringify(recurrence) : null,
       },
     });
@@ -107,24 +107,21 @@ export class TaskService {
 
     const { title, description, quadrant, completed, order, roleId, dueDate, dueTime, recurrence } = updateTaskInput;
 
-    // 构建更新数据，只包含传入的字段
-    // 注意：description 和 roleId 的处理
-    // - undefined: 不更新该字段
-    // - 空字符串 '' 或 null: 清空该字段（转为 null）
-    // - 有值: 更新为该值
+    // 构建更新数据，只包含传入的字段（见 keyDoContract/CONVENTION.md）
+    // - undefined/未传: 不更新
+    // - null: 清空
+    // - ""、0 等: 原样写入，不得当作清空
     const task = await this.prisma.task.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
-        ...(description !== undefined && {
-          description: description === '' ? null : description // 空字符串转为 null 清空字段
-        }),
+        ...(description !== undefined && { description: description }), // null 清空，"" 原样存储
         ...(quadrant !== undefined && { quadrant }),
         ...(completed !== undefined && { completed }),
-        ...(order !== undefined && { order }),  // 支持 order 更新
-        ...(roleId !== undefined && { roleId }),  // 新增：支持 roleId 更新（可为 null）
-        ...(dueDate !== undefined && { dueDate: dueDate || null }),
-        ...(dueTime !== undefined && { dueTime: dueTime || null }),
+        ...(order !== undefined && { order }),
+        ...(roleId !== undefined && { roleId }),
+        ...(dueDate !== undefined && { dueDate: dueDate }), // null 清空，有效字符串原样存储
+        ...(dueTime !== undefined && { dueTime: dueTime }), // null 清空，HH:mm 原样存储
         ...(recurrence !== undefined && { recurrence: recurrence ? JSON.stringify(recurrence) : null }),
       },
     });

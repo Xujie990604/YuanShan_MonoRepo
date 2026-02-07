@@ -83,15 +83,16 @@ export const updateTaskSchema = z.object({
     .optional(),
   description: z.string()
     .max(1000, '任务详情不能超过 1000 个字符')
-    .optional(), // 任务详情（可选）
+    .nullable()
+    .optional(), // null=清空，undefined=不更新，""=主动设为空字符串（见 CONVENTION.md）
   quadrant: z.enum(['Q1', 'Q2', 'Q3', 'Q4'], {
     errorMap: () => ({ message: '象限类型必须是 Q1、Q2、Q3 或 Q4' }),
   }).optional(),
   completed: z.boolean().optional(),
   order: z.string().optional(), // 用于象限内排序
-  roleId: z.string().uuid().nullable().optional(), // 关联的角色 ID（可选，支持设为 null）
+  roleId: z.string().uuid().nullable().optional(), // null=清空，undefined=不更新
 
-  // 日期字段验证
+  // 日期字段：null=清空，undefined=不更新；""/0 不用于清空（见 CONVENTION.md）
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式必须为 YYYY-MM-DD').nullable().optional(),
   dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, '时间格式必须为 HH:mm').nullable().optional(),
   recurrence: z.object({

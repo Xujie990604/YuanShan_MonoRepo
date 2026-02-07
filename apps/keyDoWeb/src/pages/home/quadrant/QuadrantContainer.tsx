@@ -152,20 +152,21 @@ export default function QuadrantContainer() {
     quadrant: QuadrantType,
     data: {
       title: string
-      description?: string
+      description?: string | null
       roleId?: string
-      dueDate?: string
-      dueTime?: string
-      recurrence?: RecurrenceRule
+      dueDate?: string | null
+      dueTime?: string | null
+      recurrence?: RecurrenceRule | null
     }
   ) => {
+    // CreateTaskInput 不接受 null，仅 undefined 表示“未提供”；将 null 转为 undefined
     createTaskMutation.mutate({
       title: data.title,
-      description: data.description,
+      description: data.description ?? undefined,
       roleId: data.roleId,
-      dueDate: data.dueDate,
-      dueTime: data.dueTime,
-      recurrence: data.recurrence,
+      dueDate: data.dueDate ?? undefined,
+      dueTime: data.dueTime ?? undefined,
+      recurrence: data.recurrence ?? undefined,
       quadrant,
     })
   }
@@ -181,13 +182,13 @@ export default function QuadrantContainer() {
   /**
    * 编辑任务确认回调
    */
-  const handleEditConfirm = (data: {
+    const handleEditConfirm = (data: {
     title: string
-    description?: string
+    description?: string | null
     roleId?: string
-    dueDate?: string
-    dueTime?: string
-    recurrence?: RecurrenceRule
+    dueDate?: string | null
+    dueTime?: string | null
+    recurrence?: RecurrenceRule | null
   }) => {
     if (!editingTask) return
 
@@ -199,18 +200,18 @@ export default function QuadrantContainer() {
     const originalDueTime = editingTask.dueTime
     const originalRecurrence = editingTask.recurrence
 
-    // 乐观更新
+    // 乐观更新（Task 类型为 string | undefined，将 null 转为 undefined）
     queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
       return oldTasks.map((t) =>
         t.id === editingTask.id
           ? {
               ...t,
               title: data.title,
-              description: data.description,
-              roleId: data.roleId,
-              dueDate: data.dueDate,
-              dueTime: data.dueTime,
-              recurrence: data.recurrence,
+              description: data.description ?? undefined,
+              roleId: data.roleId ?? undefined,
+              dueDate: data.dueDate ?? undefined,
+              dueTime: data.dueTime ?? undefined,
+              recurrence: data.recurrence ?? undefined,
             }
           : t
       )

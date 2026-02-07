@@ -157,7 +157,7 @@ type CreateTaskInput = z.infer<typeof createTaskSchema>;
  */
 declare const updateTaskSchema: z.ZodObject<{
     title: z.ZodOptional<z.ZodString>;
-    description: z.ZodOptional<z.ZodString>;
+    description: z.ZodOptional<z.ZodNullable<z.ZodString>>;
     quadrant: z.ZodOptional<z.ZodEnum<["Q1", "Q2", "Q3", "Q4"]>>;
     completed: z.ZodOptional<z.ZodBoolean>;
     order: z.ZodOptional<z.ZodString>;
@@ -182,7 +182,7 @@ declare const updateTaskSchema: z.ZodObject<{
     }>>>;
 }, "strip", z.ZodTypeAny, {
     title?: string | undefined;
-    description?: string | undefined;
+    description?: string | null | undefined;
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;
@@ -197,7 +197,7 @@ declare const updateTaskSchema: z.ZodObject<{
     completed?: boolean | undefined;
 }, {
     title?: string | undefined;
-    description?: string | undefined;
+    description?: string | null | undefined;
     quadrant?: "Q1" | "Q2" | "Q3" | "Q4" | undefined;
     order?: string | undefined;
     roleId?: string | null | undefined;

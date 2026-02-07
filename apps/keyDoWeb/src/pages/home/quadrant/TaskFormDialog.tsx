@@ -73,11 +73,11 @@ interface TaskFormDialogProps {
   onOpenChange: (open: boolean) => void
   onConfirm: (data: {
     title: string
-    description?: string
+    description?: string | null
     roleId?: string
-    dueDate?: string
-    dueTime?: string
-    recurrence?: RecurrenceRule
+    dueDate?: string | null
+    dueTime?: string | null
+    recurrence?: RecurrenceRule | null
   }) => void
 }
 
@@ -175,15 +175,15 @@ export default function TaskFormDialog({
   const handleSubmit = form.handleSubmit((data) => {
     // 调用父组件传递的确认回调
     const trimmedDescription = data.description?.trim()
-
-    // 简化处理：空字符串就传空字符串，服务端会将空字符串转为 null 清空字段
+    const recurrenceValue =
+      mode === 'edit' && dateValue.recurrence === undefined ? null : (dateValue.recurrence ?? undefined)
     onConfirm({
       title: data.title.trim(),
-      description: trimmedDescription === '' ? '' : (trimmedDescription || undefined), // 空字符串传递空字符串
-      roleId: data.roleId || undefined, // 空字符串转为 undefined
-      dueDate: dateValue.dueDate,
-      dueTime: dateValue.dueTime,
-      recurrence: dateValue.recurrence,
+      description: trimmedDescription === '' ? (mode === 'edit' ? null : undefined) : (trimmedDescription || undefined),
+      roleId: data.roleId || undefined,
+      dueDate: dateValue.dueDate === undefined ? (mode === 'edit' ? null : undefined) : dateValue.dueDate,
+      dueTime: dateValue.dueTime === undefined ? (mode === 'edit' ? null : undefined) : dateValue.dueTime,
+      recurrence: recurrenceValue,
     })
     form.reset() // 重置表单
     setDateValue({}) // 重置日期

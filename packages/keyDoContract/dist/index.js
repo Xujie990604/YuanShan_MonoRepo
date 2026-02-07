@@ -32,8 +32,8 @@ var createTaskSchema = z.object({
 });
 var updateTaskSchema = z.object({
   title: z.string().min(1, "\u4EFB\u52A1\u6807\u9898\u4E0D\u80FD\u4E3A\u7A7A").max(64, "\u4EFB\u52A1\u6807\u9898\u4E0D\u80FD\u8D85\u8FC7 64 \u4E2A\u5B57\u7B26").optional(),
-  description: z.string().max(1e3, "\u4EFB\u52A1\u8BE6\u60C5\u4E0D\u80FD\u8D85\u8FC7 1000 \u4E2A\u5B57\u7B26").optional(),
-  // 任务详情（可选）
+  description: z.string().max(1e3, "\u4EFB\u52A1\u8BE6\u60C5\u4E0D\u80FD\u8D85\u8FC7 1000 \u4E2A\u5B57\u7B26").nullable().optional(),
+  // null=清空，undefined=不更新，""=主动设为空字符串（见 CONVENTION.md）
   quadrant: z.enum(["Q1", "Q2", "Q3", "Q4"], {
     errorMap: () => ({ message: "\u8C61\u9650\u7C7B\u578B\u5FC5\u987B\u662F Q1\u3001Q2\u3001Q3 \u6216 Q4" })
   }).optional(),
@@ -41,8 +41,8 @@ var updateTaskSchema = z.object({
   order: z.string().optional(),
   // 用于象限内排序
   roleId: z.string().uuid().nullable().optional(),
-  // 关联的角色 ID（可选，支持设为 null）
-  // 日期字段验证
+  // null=清空，undefined=不更新
+  // 日期字段：null=清空，undefined=不更新；""/0 不用于清空（见 CONVENTION.md）
   dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "\u65E5\u671F\u683C\u5F0F\u5FC5\u987B\u4E3A YYYY-MM-DD").nullable().optional(),
   dueTime: z.string().regex(/^([0-1]\d|2[0-3]):[0-5]\d$/, "\u65F6\u95F4\u683C\u5F0F\u5FC5\u987B\u4E3A HH:mm").nullable().optional(),
   recurrence: z.object({
