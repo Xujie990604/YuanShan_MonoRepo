@@ -82,3 +82,22 @@ export function useDeleteTask() {
     },
   })
 }
+
+/**
+ * 设置任务完成状态（完成/取消完成统一走此接口，不做乐观更新）
+ */
+export function useCompleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { completed: boolean } }) =>
+      taskApi.completeTask(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.list() })
+      // 不单独 toast，完成/取消完成是高频操作
+    },
+    onError: (error: any) => {
+      toast.error(error.message || '操作失败')
+    },
+  })
+}

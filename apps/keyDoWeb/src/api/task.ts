@@ -35,3 +35,10 @@ export function updateTask(id: string, data: UpdateTaskInput): Promise<Task> {
 export function deleteTask(id: string): Promise<{ success: boolean }> {
   return apiClient.delete(`/tasks/${id}`)
 }
+
+/**
+ * 设置任务完成状态（支持重复任务自动生成下一实例）
+ */
+export function completeTask(id: string, data: { completed: boolean }): Promise<Task> {
+  return apiClient.post(`/tasks/${id}/complete`, data)
+}

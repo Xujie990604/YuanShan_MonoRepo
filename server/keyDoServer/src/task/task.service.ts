@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTaskInput, UpdateTaskInput, Task, RecurrenceRule } from '@yuan-shan/keydo-contract';
+import { CreateTaskInput, UpdateTaskInput, CompleteTaskInput, Task, RecurrenceRule } from '@yuan-shan/keydo-contract';
 import { getRankBetween, getInitialRank } from '@yuan-shan/tools';
 
 @Injectable()
@@ -50,19 +50,23 @@ export class TaskService {
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
     const { title, description, quadrant, roleId, dueDate, dueTime, recurrence } = createTaskInput;
 
+    // 重复任务：忽略前端 dueDate（其用于推导 recurrence），由后端根据规则和当前日期计算
+    let finalDueDate: string | null;
+    if (recurrence) {
+      finalDueDate = this.calculateNextDueDate(new Date(), recurrence);
+    } else {
+      finalDueDate = dueDate ?? null;
+    }
+
     // 获取目标象限最后一个未完成任务的 order
-    // 按 order 降序排列，取第一个即为最后一个任务
     const lastTask = await this.prisma.task.findFirst({
       where: { userId, quadrant, completed: false },
       orderBy: { order: 'desc' },
     });
 
-    // 计算新任务的 order（追加到末尾）
-    // 如果象限内没有未完成任务，使用初始值
-    // 如果有任务，在最后一个任务之后生成新值
     const newOrder = lastTask
-      ? getRankBetween(lastTask.order, null)  // 比最后一个大
-      : getInitialRank();                      // 第一个任务
+      ? getRankBetween(lastTask.order, null)
+      : getInitialRank();
 
     const task = await this.prisma.task.create({
       data: {
@@ -73,7 +77,7 @@ export class TaskService {
         order: newOrder,
         roleId,
         completed: false,
-        dueDate: dueDate ?? null, // undefined→null，"" 原样存储（create schema 通常不传 ""）
+        dueDate: finalDueDate,
         dueTime: dueTime ?? null,
         recurrence: recurrence ? JSON.stringify(recurrence) : null,
       },
@@ -147,9 +151,11 @@ export class TaskService {
   }
 
   /**
-   * 完成任务（支持重复任务自动生成）
+   * 设置任务完成状态（支持 completed: true/false）
+   * - completed=true：标记完成；若为重复任务则清除 recurrence、创建下一实例
+   * - completed=false：取消完成，仅更新 completed 字段
    */
-  async complete(id: string, userId: number): Promise<Task> {
+  async complete(id: string, userId: number, input: CompleteTaskInput): Promise<Task> {
     const task = await this.prisma.task.findFirst({
       where: { id, userId },
     });
@@ -158,42 +164,71 @@ export class TaskService {
       throw new NotFoundException('任务不存在');
     }
 
-    // 标记当前任务为已完成
-    const completedTask = await this.prisma.task.update({
-      where: { id },
-      data: { completed: true },
-    });
+    const { completed } = input;
 
-    // 如果是重复任务，自动生成下一个实例
-    if (task.recurrence) {
-      const recurrence = JSON.parse(task.recurrence) as RecurrenceRule;
-      // calculateNextDueDate 已返回 YYYY-MM-DD 字符串，Prisma 的 dueDate/dueTime 为 String?
-      const nextDueDate = this.calculateNextDueDate(
-        task.dueDate ? new Date(task.dueDate + 'T00:00:00+08:00') : new Date(),
-        recurrence
-      );
+    if (!completed) {
+      const updated = await this.prisma.task.update({
+        where: { id },
+        data: { completed: false },
+      });
+      return this.mapToTask(updated);
+    }
 
-      await this.prisma.task.create({
+    // 完成：事务内先更新当前任务，再按需创建下一实例
+    const completedTask = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.task.update({
+        where: { id },
         data: {
-          userId,
-          title: task.title,
-          description: task.description,
-          quadrant: task.quadrant,
-          roleId: task.roleId,
-          order: getRankBetween(null, null), // 插入到列表顶部
-          completed: false,
-          dueDate: nextDueDate,
-          dueTime: task.dueTime,
-          recurrence: task.recurrence,
+          completed: true,
+          recurrence: null, // 已完成任务清除重复字段，保留 dueDate 作为该次完成日
         },
       });
-    }
+
+      if (task.recurrence) {
+        const recurrence = JSON.parse(task.recurrence) as RecurrenceRule;
+        const baseDate = task.dueDate
+          ? new Date(task.dueDate + 'T00:00:00+08:00')
+          : new Date();
+        const nextDueDate = this.calculateNextDueDate(baseDate, recurrence);
+
+        // 新任务插到该象限未完成列表顶部（order 比当前第一个未完成更小）
+        const firstIncomplete = await tx.task.findFirst({
+          where: { userId, quadrant: task.quadrant, completed: false },
+          orderBy: { order: 'asc' },
+        });
+        const newOrder = firstIncomplete
+          ? getRankBetween(null, firstIncomplete.order)
+          : getInitialRank();
+
+        await tx.task.create({
+          data: {
+            userId,
+            title: task.title,
+            description: task.description,
+            quadrant: task.quadrant,
+            roleId: task.roleId,
+            order: newOrder,
+            completed: false,
+            dueDate: nextDueDate,
+            dueTime: task.dueTime,
+            recurrence: task.recurrence,
+          },
+        });
+      }
+
+      return updated;
+    });
 
     return this.mapToTask(completedTask);
   }
 
   /**
    * 计算下一个截止日期（格式：YYYY-MM-DD）
+   *
+   * - DAILY: 基准日 + interval 天
+   * - WEEKLY: 基准日 + interval 周（固定 +7*interval 天）
+   * - MONTHLY: 当月 rule.dayOfMonth 日；若该日已过或为当天，则取下一月的同日
+   *   - dayOfMonth 超过当月天数时取当月最后一天（如 2 月 31 → 2 月 28/29）
    */
   private calculateNextDueDate(baseDate: Date, rule: RecurrenceRule): string {
     const result = new Date(baseDate);
@@ -205,12 +240,28 @@ export class TaskService {
       case 'WEEKLY':
         result.setDate(result.getDate() + 7 * (rule.interval || 1));
         break;
-      case 'MONTHLY':
-        result.setMonth(result.getMonth() + (rule.interval || 1));
+      case 'MONTHLY': {
+        const dayOfMonth = rule.dayOfMonth ?? result.getDate();
+        const year = result.getFullYear();
+        const month = result.getMonth();
+        // 当月最后一天，避免 2 月 31 等非法日期
+        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+        const day = Math.min(dayOfMonth, lastDayOfMonth);
+        result.setFullYear(year);
+        result.setMonth(month);
+        result.setDate(day);
+        // 若当月该日已过或为今天，则取下月同日
+        if (result.getTime() <= baseDate.getTime()) {
+          result.setMonth(result.getMonth() + (rule.interval || 1));
+          const nextYear = result.getFullYear();
+          const nextMonth = result.getMonth();
+          const nextLastDay = new Date(nextYear, nextMonth + 1, 0).getDate();
+          result.setDate(Math.min(dayOfMonth, nextLastDay));
+        }
         break;
+      }
     }
 
-    // 格式化为 YYYY-MM-DD
     const year = result.getFullYear();
     const month = String(result.getMonth() + 1).padStart(2, '0');
     const day = String(result.getDate()).padStart(2, '0');

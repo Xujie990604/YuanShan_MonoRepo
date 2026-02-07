@@ -215,6 +215,20 @@ declare const updateTaskSchema: z.ZodObject<{
  * 更新任务请求参数类型
  */
 type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+/**
+ * 完成任务请求参数 Schema（设置完成状态）
+ */
+declare const completeTaskSchema: z.ZodObject<{
+    completed: z.ZodBoolean;
+}, "strip", z.ZodTypeAny, {
+    completed: boolean;
+}, {
+    completed: boolean;
+}>;
+/**
+ * 完成任务请求参数类型
+ */
+type CompleteTaskInput = z.infer<typeof completeTaskSchema>;
 
 declare const ROLE_COLORS: readonly ["blue", "green", "orange", "purple", "red", "yellow", "pink", "gray"];
 type RoleColor = typeof ROLE_COLORS[number];
@@ -262,4 +276,4 @@ declare const updateRoleSchema: z.ZodObject<{
 }>;
 type UpdateRoleInput = z.infer<typeof updateRoleSchema>;
 
-export { type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type RecurrenceRule, type RecurrenceType, type Role, type RoleColor, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
+export { type CompleteTaskInput, type CreateRoleInput, type CreateTaskInput, type QuadrantType, ROLE_COLORS, type RecurrenceRule, type RecurrenceType, type Role, type RoleColor, type SigninInput, type SigninResponse, type SignupInput, type SignupResponse, type Task, type UpdateRoleInput, type UpdateTaskInput, type UserInfo, completeTaskSchema, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };

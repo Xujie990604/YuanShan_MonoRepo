@@ -8,7 +8,7 @@ import DraggedTaskPreview from './DraggedTaskPreview'
 import TaskFormDialog from './TaskFormDialog'
 import type { Task, QuadrantType, RecurrenceRule } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from '@/hooks/use-tasks'
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask, useCompleteTask } from '@/hooks/use-tasks'
 import { queryKeys } from '@/hooks/query-keys'
 import { useRoleStore } from '@/store/role'
 
@@ -30,6 +30,7 @@ export default function QuadrantContainer() {
   const createTaskMutation = useCreateTask()
   const updateTaskMutation = useUpdateTask()
   const deleteTaskMutation = useDeleteTask()
+  const completeTaskMutation = useCompleteTask()
   const queryClient = useQueryClient()
 
   // ========== 角色聚焦状态 ==========
@@ -91,36 +92,17 @@ export default function QuadrantContainer() {
    */
   const [currentOverQuadrant, setCurrentOverQuadrant] = useState<QuadrantType | null>(null)
 
-  // ========== 任务操作方法（带乐观更新） ==========
+  // ========== 任务操作方法 ==========
   
   /**
-   * 切换任务完成状态（带乐观更新）
+   * 切换任务完成状态（统一调用 complete 接口，使用 invalidateQueries 刷新，不做乐观更新）
    */
   const handleToggleComplete = (id: string) => {
     const currentTasks = queryClient.getQueryData<Task[]>(queryKeys.tasks.list()) || tasks
     const task = currentTasks.find((t) => t.id === id)
     if (!task) return
 
-    const originalCompleted = task.completed
-    
-    queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
-      return oldTasks.map((t) =>
-        t.id === id ? { ...t, completed: !t.completed } : t
-      )
-    })
-
-    updateTaskMutation.mutate(
-      { id, data: { completed: !task.completed } },
-      {
-        onError: () => {
-          queryClient.setQueryData<Task[]>(queryKeys.tasks.list(), (oldTasks = []) => {
-            return oldTasks.map((t) =>
-              t.id === id ? { ...t, completed: originalCompleted } : t
-            )
-          })
-        },
-      }
-    )
+    completeTaskMutation.mutate({ id, data: { completed: !task.completed } })
   }
 
   /**

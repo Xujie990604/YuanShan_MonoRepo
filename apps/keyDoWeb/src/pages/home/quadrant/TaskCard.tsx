@@ -148,18 +148,21 @@ export default function TaskCard({ task, hoverColor, onToggleComplete, onDelete,
             </Badge>
           )}
 
-          {/* 重复图标（重复任务） */}
+          {/* 重复任务：显示 recurrence + dueTime? + dueDate */}
           {task.recurrence && (
             <Badge
               variant="outline"
-              className="text-xs px-1.5 py-0 shrink-0 flex items-center gap-1"
+              className={cn(
+                'text-xs px-1.5 py-0 shrink-0 flex items-center gap-1',
+                isTaskOverdue && 'text-red-600 border-red-600',
+                isTaskToday && 'text-green-600 border-green-600'
+              )}
             >
               <Repeat className="h-3 w-3" />
               <span>
                 {formatRecurrence(task.recurrence)}
-                {task.dueTime && (
-                  <> {task.dueTime}</>
-                )}
+                {task.dueTime && <> {task.dueTime}</>}
+                {task.dueDate && <> · {formatTaskDate(task.dueDate)}</>}
               </span>
             </Badge>
           )}

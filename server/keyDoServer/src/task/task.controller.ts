@@ -12,8 +12,10 @@ import { TaskService } from './task.service';
 import {
   createTaskSchema,
   updateTaskSchema,
+  completeTaskSchema,
   CreateTaskInput,
   UpdateTaskInput,
+  CompleteTaskInput,
   Task,
 } from '@yuan-shan/keydo-contract';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -63,10 +65,14 @@ export class TaskController {
   }
 
   /**
-   * 完成任务（支持重复任务自动生成）
+   * 设置任务完成状态（支持重复任务自动生成下一实例）
    */
   @Post(':id/complete')
-  async complete(@Param('id') id: string, @Req() req): Promise<Task> {
-    return this.taskService.complete(id, req.user.userId);
+  async complete(
+    @Param('id') id: string,
+    @Req() req,
+    @Body(new ZodValidationPipe(completeTaskSchema)) completeTaskInput: CompleteTaskInput,
+  ): Promise<Task> {
+    return this.taskService.complete(id, req.user.userId, completeTaskInput);
   }
 }

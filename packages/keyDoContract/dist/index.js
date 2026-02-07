@@ -53,6 +53,9 @@ var updateTaskSchema = z.object({
   }).nullable().optional()
   // 支持设为 null 清除重复
 });
+var completeTaskSchema = z.object({
+  completed: z.boolean()
+});
 var ROLE_COLORS = [
   "blue",
   // 蓝色系 - 专业/理性
@@ -91,6 +94,6 @@ var updateRoleSchema = z.object({
   )
 });
 
-export { ROLE_COLORS, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
+export { ROLE_COLORS, completeTaskSchema, createRoleSchema, createTaskSchema, signinSchema, signupSchema, updateRoleSchema, updateTaskSchema };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

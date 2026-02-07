@@ -55,6 +55,9 @@ var updateTaskSchema = zod.z.object({
   }).nullable().optional()
   // 支持设为 null 清除重复
 });
+var completeTaskSchema = zod.z.object({
+  completed: zod.z.boolean()
+});
 var ROLE_COLORS = [
   "blue",
   // 蓝色系 - 专业/理性
@@ -94,6 +97,7 @@ var updateRoleSchema = zod.z.object({
 });
 
 exports.ROLE_COLORS = ROLE_COLORS;
+exports.completeTaskSchema = completeTaskSchema;
 exports.createRoleSchema = createRoleSchema;
 exports.createTaskSchema = createTaskSchema;
 exports.signinSchema = signinSchema;

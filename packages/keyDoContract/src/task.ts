@@ -107,3 +107,15 @@ export const updateTaskSchema = z.object({
  * 更新任务请求参数类型
  */
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+
+/**
+ * 完成任务请求参数 Schema（设置完成状态）
+ */
+export const completeTaskSchema = z.object({
+  completed: z.boolean(),
+});
+
+/**
+ * 完成任务请求参数类型
+ */
+export type CompleteTaskInput = z.infer<typeof completeTaskSchema>;
