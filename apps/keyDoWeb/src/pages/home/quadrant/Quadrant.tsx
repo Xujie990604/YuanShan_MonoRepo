@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import TaskCard from './TaskCard'
 import TaskFormDialog from './TaskFormDialog'
-import type { Task, QuadrantType } from '@yuan-shan/keydo-contract'
+import type { Task, QuadrantType, RecurrenceRule } from '@yuan-shan/keydo-contract'
 import { QUADRANT_CONFIGS } from './config'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +25,14 @@ interface QuadrantProps {
   currentOverQuadrant: QuadrantType | null
   onToggleComplete: (id: string) => void
   onDelete: (id: string) => void
-  onAddTask: (quadrant: QuadrantType, data: { title: string; description?: string }) => void
+  onAddTask: (quadrant: QuadrantType, data: {
+    title: string
+    description?: string | null
+    roleId?: string
+    dueDate?: string | null
+    dueTime?: string | null
+    recurrence?: RecurrenceRule | null
+  }) => void
   onEdit: (task: Task) => void
 }
 
@@ -120,9 +127,16 @@ export default function Quadrant({
     currentOverQuadrant === quadrantId
 
   /**
-   * 处理添加任务确认
+   * 处理添加任务确认（与 TaskFormDialog onConfirm 入参一致）
    */
-  const handleAddTaskConfirm = (data: { title: string; description?: string }) => {
+  const handleAddTaskConfirm = (data: {
+    title: string
+    description?: string | null
+    roleId?: string
+    dueDate?: string | null
+    dueTime?: string | null
+    recurrence?: RecurrenceRule | null
+  }) => {
     onAddTask(quadrantId, data)
   }
 
