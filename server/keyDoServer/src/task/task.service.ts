@@ -50,10 +50,10 @@ export class TaskService {
   async create(userId: number, createTaskInput: CreateTaskInput): Promise<Task> {
     const { title, description, quadrant, roleId, dueDate, dueTime, recurrence } = createTaskInput;
 
-    // 重复任务：忽略前端 dueDate（其用于推导 recurrence），由后端根据规则和当前日期计算
+    // 重复任务：忽略前端 dueDate，由后端根据规则和当前日期计算「首次」截止日（可从今天开始）
     let finalDueDate: string | null;
     if (recurrence) {
-      finalDueDate = this.calculateNextDueDate(new Date(), recurrence);
+      finalDueDate = this.calculateNextDueDate(new Date(), recurrence, { firstOccurrence: true });
     } else {
       finalDueDate = dueDate ?? null;
     }
@@ -225,20 +225,32 @@ export class TaskService {
   /**
    * 计算下一个截止日期（格式：YYYY-MM-DD）
    *
-   * - DAILY: 基准日 + interval 天
-   * - WEEKLY: 基准日 + interval 周（固定 +7*interval 天）
+   * @param baseDate 基准日（创建时=今天，完成时=本次任务的 dueDate）
+   * @param rule 重复规则
+   * @param options.firstOccurrence 为 true 时表示算「首次」截止日（创建任务用），可从今天开始；为 false 表示算「下一次」（完成任务用），必须晚于 baseDate
+   *
+   * - DAILY: firstOccurrence 时=基准日（今天）；否则=基准日 + interval 天
+   * - WEEKLY: firstOccurrence 时=基准日（今天）；否则=基准日 + interval 周
    * - MONTHLY: 当月 rule.dayOfMonth 日；若该日已过或为当天，则取下一月的同日
-   *   - dayOfMonth 超过当月天数时取当月最后一天（如 2 月 31 → 2 月 28/29）
    */
-  private calculateNextDueDate(baseDate: Date, rule: RecurrenceRule): string {
+  private calculateNextDueDate(
+    baseDate: Date,
+    rule: RecurrenceRule,
+    options?: { firstOccurrence?: boolean },
+  ): string {
     const result = new Date(baseDate);
+    const firstOccurrence = options?.firstOccurrence ?? false;
 
     switch (rule.type) {
       case 'DAILY':
-        result.setDate(result.getDate() + (rule.interval || 1));
+        if (!firstOccurrence) {
+          result.setDate(result.getDate() + (rule.interval || 1));
+        }
         break;
       case 'WEEKLY':
-        result.setDate(result.getDate() + 7 * (rule.interval || 1));
+        if (!firstOccurrence) {
+          result.setDate(result.getDate() + 7 * (rule.interval || 1));
+        }
         break;
       case 'MONTHLY': {
         const dayOfMonth = rule.dayOfMonth ?? result.getDate();
@@ -250,8 +262,12 @@ export class TaskService {
         result.setFullYear(year);
         result.setMonth(month);
         result.setDate(day);
-        // 若当月该日已过或为今天，则取下月同日
-        if (result.getTime() <= baseDate.getTime()) {
+        // firstOccurrence 时：仅当该日已过（严格小于今天）才取下月，今天算首次
+        // 否则（完成后的下一实例）：该日已过或为当天都取下月
+        const shouldGoNextMonth = firstOccurrence
+          ? result.getTime() < baseDate.getTime()
+          : result.getTime() <= baseDate.getTime();
+        if (shouldGoNextMonth) {
           result.setMonth(result.getMonth() + (rule.interval || 1));
           const nextYear = result.getFullYear();
           const nextMonth = result.getMonth();
